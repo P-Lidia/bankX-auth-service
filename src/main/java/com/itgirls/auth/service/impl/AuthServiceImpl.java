@@ -8,9 +8,10 @@ import com.itgirls.auth.repository.EmailTokenRepository;
 import com.itgirls.auth.repository.UserRepository;
 import com.itgirls.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -21,34 +22,35 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final EmailTokenRepository emailTokenRepository;
     private final PasswordEncoder passwordEncoder;
+    final private UserMapper userMapper;
 
     @Override
     @Transactional
     public User register(AuthRequestDto authRequestDto) {
         // Проверка уникальности email
         if (userRepository.existsByEmail(authRequestDto.getEmail())) {
-            throw new RuntimeException("Email уже занят");
+            throw new RuntimeException("Email is already taken");
         }
 
         // Проверка совпадения паролей
         if (!authRequestDto.getPassword().equals(authRequestDto.getConfirmPassword())) {
-            throw new RuntimeException("Пароли не совпадают");
+            throw new RuntimeException("Passwords do not match");
         }
 
         // Создание пользователя через Mapper
-        User user = UserMapper.INSTANCE.toEntity(authRequestDto);
+        User user = userMapper.toEntity(authRequestDto);
         user.setPasswordHash(passwordEncoder.encode(authRequestDto.getPassword()));
         user.setStatus(User.Status.PENDING);
         user.setCreatedAt(LocalDateTime.now());
 
-        User savedUser  = userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
         // Генерация токена активации
         String activationToken = UUID.randomUUID().toString();
 
         // Сохранение токена в таблицу email_tokens
         EmailToken emailToken = EmailToken.builder()
-                .userId(savedUser .getId())
+                .userId(savedUser.getId())
                 .token(activationToken)
                 .expiresAt(LocalDateTime.now().plusDays(1)) // Токен действителен 1 день
                 .used(false)
@@ -58,25 +60,25 @@ public class AuthServiceImpl implements AuthService {
 
         // TODO: отправка события USER_REGISTERED в Kafka для Notification Service
 
-        return savedUser ;
+        return savedUser;
     }
 
     @Override
     @Transactional
     public User activateAccount(String token) {
         EmailToken emailToken = emailTokenRepository.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Неверный или истекший токен активации"));
+                .orElseThrow(() -> new RuntimeException("Invalid or expired activation token"));
 
         // Проверка: если токен уже использован или истек
         if (emailToken.getUsed() || emailToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Токен уже использован или истек");
+            throw new RuntimeException("Token has already been used or expired");
         }
 
         User user = userRepository.findById(emailToken.getUserId())
-                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setStatus(User.Status.ACTIVE);
-        User activatedUser  = userRepository.save(user);
+        User activatedUser = userRepository.save(user);
 
         // Отметить токен как использованный
         emailToken.setUsed(true);
@@ -84,6 +86,6 @@ public class AuthServiceImpl implements AuthService {
 
         // TODO: отправка события USER_ACTIVATED в Kafka для Notification Service
 
-        return activatedUser ;
+        return activatedUser;
     }
 }

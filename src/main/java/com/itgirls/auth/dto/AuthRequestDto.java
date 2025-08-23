@@ -12,17 +12,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AuthRequestDto {
 
-    @Email(message = "Email должен быть валидным")
+    @Email(message = "Email must be valid")
     private String email;
-    @Size(min = 10, message = "Пароль должен содержать минимум 10 символов")
+    @Size(min = 10, message = "Password must contain at least 10 characters")
     @Pattern(
             regexp = "^(?=.*[A-Z])(?=.*\\d).+$",
-            message = "Пароль должен содержать хотя бы одну заглавную букву и одну цифру"
+            message = "ПPassword must contain at least one uppercase letter and one digit"
     )
     private String password;
-    @Size(min = 10, message = "Подтверждение пароля должно содержать минимум 10 символов")
+    @Size(min = 10, message = "Password confirmation must contain at least 10 characters")
     private String confirmPassword;
 }
-
-
-
