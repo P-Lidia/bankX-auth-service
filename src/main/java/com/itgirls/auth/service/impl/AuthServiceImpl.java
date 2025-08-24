@@ -1,6 +1,6 @@
 package com.itgirls.auth.service.impl;
 
-import com.itgirls.auth.dto.AuthRequestDto;
+import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.entity.EmailToken;
 import com.itgirls.auth.entity.User;
 import com.itgirls.auth.mapper.UserMapper;
@@ -26,20 +26,20 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public User register(AuthRequestDto authRequestDto) {
+    public User register(RegistrationRequestDto registrationRequestDto) {
         // Проверка уникальности email
-        if (userRepository.existsByEmail(authRequestDto.getEmail())) {
+        if (userRepository.existsByEmail(registrationRequestDto.getEmail())) {
             throw new RuntimeException("Email is already taken");
         }
 
         // Проверка совпадения паролей
-        if (!authRequestDto.getPassword().equals(authRequestDto.getConfirmPassword())) {
+        if (!registrationRequestDto.getPassword().equals(registrationRequestDto.getConfirmPassword())) {
             throw new RuntimeException("Passwords do not match");
         }
 
         // Создание пользователя через Mapper
-        User user = userMapper.toEntity(authRequestDto);
-        user.setPasswordHash(passwordEncoder.encode(authRequestDto.getPassword()));
+        User user = userMapper.toEntity(registrationRequestDto);
+        user.setPasswordHash(passwordEncoder.encode(registrationRequestDto.getPassword()));
         user.setStatus(User.Status.PENDING);
         user.setCreatedAt(LocalDateTime.now());
 

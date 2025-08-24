@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthRequestDto {
+public class RegistrationRequestDto {
 
     @Email(message = "Email must be valid")
     private String email;

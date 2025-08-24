@@ -1,6 +1,6 @@
 package com.itgirls.auth.mapper;
 
-import com.itgirls.auth.dto.AuthRequestDto;
+import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.entity.User;
 import org.mapstruct.*;
 
@@ -13,5 +13,5 @@ public interface UserMapper {
     @Mapping(target = "passwordHash", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    User toEntity(AuthRequestDto authRequestDto);
+    User toEntity(RegistrationRequestDto registrationRequestDto);
 }

@@ -1,6 +1,6 @@
 package com.itgirls.auth.controller;
 
-import com.itgirls.auth.dto.AuthRequestDto;
+import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.entity.User;
 import com.itgirls.auth.service.AuthService;
 import jakarta.validation.Valid;
@@ -17,8 +17,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody AuthRequestDto authRequestDto) {
-        User user = authService.register(authRequestDto);
+    public ResponseEntity<User> register(@Valid @RequestBody RegistrationRequestDto registrationRequestDto) {
+        User user = authService.register(registrationRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
