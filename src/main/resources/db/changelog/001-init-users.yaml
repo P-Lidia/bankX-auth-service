@@ -1,0 +1,62 @@
+databaseChangeLog:
+- changeSet:
+    id: create-users
+    author: P-Lidia
+    changes:
+      - sql: |
+          CREATE TABLE users (
+            id BIGSERIAL PRIMARY KEY,
+            email VARCHAR(255) NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            status VARCHAR(20) NOT NULL,
+            created_at TIMESTAMP DEFAULT now(),
+            updated_at TIMESTAMP DEFAULT now()
+          ) PARTITION BY RANGE (created_at);
+      - sql: |
+          ALTER TABLE users
+          ADD CONSTRAINT uq_users_partitioned_email UNIQUE (email);
+
+- changeSet:
+    id: create-roles
+    author: P-Lidia
+    changes:
+      - createTable:
+         tableName: roles
+         columns:
+           - column:
+             name: id
+             type: BIGSERIAL
+             constraints:
+              primaryKey: true
+           - column:
+              name: code
+              type: VARCHAR(20)
+              constraints:
+               nullable: false
+               unique: true
+
+- changeSet:
+    id: create-user-roles
+    author: P-Lidia
+    changes:
+      - createTable:
+         tableName: user_roles
+         columns:
+           - column:
+             name: user_id
+             type: BIGINT
+             constraints:
+               nullable: false
+               references: users(id)
+               foreignKeyName: fk_user_role_users
+           - column:
+              name: role_id
+              type: BIGINT
+              constraints:
+                nullable: false
+                references: roles(id)
+                foreignKeyName: fk_user_role_roles
+      - addUniqueConstraint:
+         tableName: user_roles
+         columnNames: user_id
+         constraintName: ux_user_roles_user_id
