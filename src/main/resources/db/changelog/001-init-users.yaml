@@ -8,15 +8,12 @@ databaseChangeLog:
             id BIGSERIAL PRIMARY KEY,
             user_name VARCHAR(255) NOT NULL,
             user_surname VARCHAR(255) NOT NULL,
-            email VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL UNIQUE,
             password_hash VARCHAR(255) NOT NULL,
             status VARCHAR(20) NOT NULL,
             created_at TIMESTAMP DEFAULT now(),
             updated_at TIMESTAMP DEFAULT now()
           ) PARTITION BY RANGE (created_at);
-      - sql: |
-          ALTER TABLE users
-          ADD CONSTRAINT uq_users_partitioned_email UNIQUE (email);
 
 - changeSet:
     id: create-roles
