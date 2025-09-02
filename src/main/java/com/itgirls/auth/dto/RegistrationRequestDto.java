@@ -1,5 +1,6 @@
 package com.itgirls.auth.dto;
 
+import com.itgirls.auth.validation.PasswordMatches;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@PasswordMatches
 public class RegistrationRequestDto {
 
     @Email(message = "Email must be valid")
@@ -17,7 +19,7 @@ public class RegistrationRequestDto {
     @Size(min = 10, message = "Password must contain at least 10 characters")
     @Pattern(
             regexp = "^(?=.*[A-Z])(?=.*\\d).+$",
-            message = "ПPassword must contain at least one uppercase letter and one digit"
+            message = "Password must contain at least one uppercase letter and one digit"
     )
     private String password;
     @Size(min = 10, message = "Password confirmation must contain at least 10 characters")
