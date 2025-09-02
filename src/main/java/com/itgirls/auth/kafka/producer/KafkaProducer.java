@@ -12,19 +12,19 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class KafkaProducer {
 
-    private KafkaTemplate<String,Object> kafkaTemplate;
+    private KafkaTemplate<String, Object> kafkaTemplate;
     @Value("${app.kafka.topics.user-events}")
     private String userEventsTopic;
 
     @Value("${app.kafka.topics.dead-letter-queue}")
     private String dlqTopic;
 
-    public void sendEvent (String key, UserEventDto userEventDto){
-        try{
+    public void sendEvent(String key, UserEventDto userEventDto) {
+        try {
             kafkaTemplate.send(userEventsTopic, key, userEventDto);
-            log.info("Standard producer sent to {}: key={}, value={}",userEventsTopic, key, userEventDto);
+            log.info("Standard producer sent to {}: key={}, value={}", userEventsTopic, key, userEventDto);
         } catch (Exception e) {
-            log.error("Error sending to {}, sending to DLQ: {}",userEventsTopic, e.getMessage());
+            log.error("Error sending to {}, sending to DLQ: {}", userEventsTopic, e.getMessage());
         }
     }
 
@@ -38,6 +38,4 @@ public class KafkaProducer {
             log.error("Failed to send to DLQ {}: {}", dlqTopic, e.getMessage());
         }
     }
-
-
 }

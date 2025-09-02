@@ -9,7 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserEventDto {
 
-    private Long id;
+    private String id;
+    private String name;
+    private String surname;
     private String email;
     private String activationKey;
 
