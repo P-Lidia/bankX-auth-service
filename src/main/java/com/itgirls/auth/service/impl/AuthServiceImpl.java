@@ -32,11 +32,6 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Email is already taken");
         }
 
-        // Проверка совпадения паролей
-        if (!registrationRequestDto.getPassword().equals(registrationRequestDto.getConfirmPassword())) {
-            throw new RuntimeException("Passwords do not match");
-        }
-
         // Создание пользователя через Mapper
         User user = userMapper.toEntity(registrationRequestDto);
         user.setPasswordHash(passwordEncoder.encode(registrationRequestDto.getPassword()));

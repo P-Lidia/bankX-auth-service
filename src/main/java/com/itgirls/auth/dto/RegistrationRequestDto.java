@@ -1,5 +1,6 @@
 package com.itgirls.auth.dto;
 
+import com.itgirls.auth.validation.PasswordMatches;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@PasswordMatches
 public class RegistrationRequestDto {
     @NotBlank(message = "Name must not be blank")
     private String name;
