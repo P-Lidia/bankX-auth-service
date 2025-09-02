@@ -17,18 +17,17 @@ public class AuthServiceImpl {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private LoginRequestDto loginRequestDto;
 
     public LoginResponseDto login(LoginRequestDto loginRequestDto) {
-        this.loginRequestDto = loginRequestDto;
         User user = userRepository.findByEmail(loginRequestDto.getEmail())
-                .orElseThrow(() -> new BadCredentialsException("Неверный email"));
+                .orElseThrow(() -> new BadCredentialsException("Wrong email!"));
 
         if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPasswordHash())) {
-            throw new BadCredentialsException("Неверный пароль");
+            throw new BadCredentialsException("Wrong password!");
         }
         String accessToken = jwtUtil.generateAccessToken(user);
         String refreshToken = jwtUtil.generateRefreshToken(user);
+        jwtUtil.saveRefreshToken(refreshToken);
         return new LoginResponseDto(
                 accessToken,
                 refreshToken

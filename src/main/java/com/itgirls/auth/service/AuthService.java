@@ -2,9 +2,9 @@ package com.itgirls.auth.service;
 
 
 import com.itgirls.auth.dto.LoginRequestDto;
-import com.itgirls.auth.entity.User;
+import com.itgirls.auth.dto.LoginResponseDto;
 
 public interface AuthService {
-    User login(LoginRequestDto loginRequestDto);
+    LoginResponseDto login(LoginRequestDto loginRequestDto);
     void logout(String refreshToken);
 }

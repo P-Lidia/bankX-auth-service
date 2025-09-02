@@ -13,4 +13,8 @@ public class JwtUtil {
 
     public void revokeRefreshToken(String refreshToken) {
     }
+
+    public void saveRefreshToken(String refreshToken) {
+
+    }
 }

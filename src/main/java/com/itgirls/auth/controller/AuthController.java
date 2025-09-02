@@ -1,6 +1,6 @@
 package com.itgirls.auth.controller;
 
-import com.itgirls.auth.dto.AuthRequestDto;
+
 import com.itgirls.auth.dto.LoginRequestDto;
 import com.itgirls.auth.dto.LoginResponseDto;
 import com.itgirls.auth.service.AuthService;
