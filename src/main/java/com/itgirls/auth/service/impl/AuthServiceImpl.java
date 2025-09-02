@@ -2,12 +2,15 @@ package com.itgirls.auth.service.impl;
 
 import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.entity.EmailToken;
+import com.itgirls.auth.entity.RefreshToken;
 import com.itgirls.auth.entity.User;
 import com.itgirls.auth.mapper.UserMapper;
 import com.itgirls.auth.repository.EmailTokenRepository;
+import com.itgirls.auth.repository.RefreshTokenRepository;
 import com.itgirls.auth.repository.UserRepository;
 import com.itgirls.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +18,7 @@ import com.itgirls.auth.dto.LoginRequestDto;
 import com.itgirls.auth.dto.LoginResponseDto;
 import org.springframework.security.authentication.BadCredentialsException;
 import com.itgirls.auth.util.JwtUtil;
-
+import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -28,6 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     final private UserMapper userMapper;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     @Transactional
@@ -93,26 +97,38 @@ public class AuthServiceImpl implements AuthService {
 
         return activatedUser;
     }
-@Override
-@Transactional
-public LoginResponseDto login(LoginRequestDto loginRequestDto) {
-    User user = userRepository.findByEmail(loginRequestDto.getEmail())
-            .orElseThrow(() -> new BadCredentialsException("Wrong email!"));
 
+    @Override
+    public LoginResponseDto login(LoginRequestDto loginRequestDto) {
+    User user = userRepository.findByEmail(loginRequestDto.getEmail())
+            .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
     if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPasswordHash())) {
-        throw new BadCredentialsException("Wrong password!");
+        throw new BadCredentialsException("Invalid email or password");
     }
     String accessToken = jwtUtil.generateAccessToken(user);
-    String refreshToken = jwtUtil.generateRefreshToken(user);
-    jwtUtil.saveRefreshToken(refreshToken);
+    RefreshToken refreshToken = generateAndSaveRefreshToken(user);
     return new LoginResponseDto(
             accessToken,
-            refreshToken
+            refreshToken.getTokenValue()
     );
-}
-@Override
-@Transactional
+    }
+
+    @Transactional
+    public RefreshToken generateAndSaveRefreshToken(User user) {
+        RefreshToken refreshToken = jwtUtil.generateRefreshToken(user);
+        return saveRefreshToken(refreshToken);
+    }
+
+    public RefreshToken saveRefreshToken(RefreshToken refreshToken) {
+        refreshTokenRepository.deleteByUser(refreshToken.getUser());
+        return refreshTokenRepository.save(refreshToken);
+    }
+
+    @Override
+    @Transactional
     public void logout(String refreshToken) {
-        jwtUtil.revokeRefreshToken(refreshToken);
+        if (!refreshTokenRepository.existsByToken(refreshToken)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Refresh token not found");        }
+        refreshTokenRepository.deleteByToken(refreshToken);
     }
 }
