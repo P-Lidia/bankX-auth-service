@@ -1,0 +1,11 @@
+databaseChangeLog:
+- changeSet:
+    id: idx_users_status
+    author: P-Lidia
+    changes:
+      - createIndex:
+          tableName: users
+          indexName: idx_users_status
+          columns:
+            - column:
+                name: status

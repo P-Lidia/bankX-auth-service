@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+     id: create-users-partition
+     author: P-Lidia
+     changes:
+       - sql: |
+           CREATE TABLE users_2025_08 PARTITION OF users
+           FOR VALUES FROM ('2025-08-01') TO ('2025-09-01');
+       - sql: |
+           CREATE TABLE users_2025_09 PARTITION OF users
+           FOR VALUES FROM ('2025-09-01') TO ('2025-10-01');
+       - sql: |
+           CREATE TABLE users_2025_10 PARTITION OF users
+           FOR VALUES FROM ('2025-10-01') TO ('2025-11-01');
+       - sql: |
+           CREATE TABLE users_2025_11 PARTITION OF users
+           FOR VALUES FROM ('2025-11-01') TO ('2025-12-01');
+       - sql: |
+           CREATE TABLE users_2025_12 PARTITION OF users
+           FOR VALUES FROM ('2025-12-01') TO ('2026-01-01');
+       - sql: |
+           CREATE TABLE users_future PARTITION OF users
+           FOR VALUES FROM ('2026-01-01') TO (MAXVALUE);

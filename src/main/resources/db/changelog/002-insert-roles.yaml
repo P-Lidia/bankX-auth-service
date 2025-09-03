@@ -1,0 +1,17 @@
+databaseChangeLog:
+- changeSet:
+    id: insert-roles
+    author: P-Lidia
+    changes:
+      - insert:
+          tableName: roles
+          columns:
+            - column:
+                name: code
+                value: USER
+      - insert:
+          tableName: roles
+          columns:
+            - column:
+                name: code
+                value: ADMIN
