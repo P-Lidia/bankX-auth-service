@@ -33,8 +33,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Создание пользователя через Mapper
-        User user = userMapper.toEntity(registrationRequestDto);
-        user.setPasswordHash(passwordEncoder.encode(registrationRequestDto.getPassword()));
+        User user = userMapper.toEntity(registrationRequestDto, passwordEncoder);
         user.setStatus(User.Status.PENDING);
         user.setCreatedAt(LocalDateTime.now());
 

@@ -3,6 +3,7 @@ package com.itgirls.auth.mapper;
 import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.entity.User;
 import org.mapstruct.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
         unmappedTargetPolicy = ReportingPolicy.IGNORE,
@@ -14,5 +15,6 @@ public interface UserMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    User toEntity(RegistrationRequestDto registrationRequestDto);
+    @Mapping(target = "password", expression = "java(passwordEncoder.encode(userCreateDto.getPassword()))")
+    User toEntity(RegistrationRequestDto registrationRequestDto, @Context PasswordEncoder passwordEncoder);
 }
