@@ -49,6 +49,7 @@ public class AuthServiceImpl implements AuthService {
                 .token(activationToken)
                 .expiresAt(LocalDateTime.now().plusDays(1)) // Токен действителен 1 день
                 .used(false)
+                .type("activation")
                 .build();
 
         emailTokenRepository.save(emailToken);

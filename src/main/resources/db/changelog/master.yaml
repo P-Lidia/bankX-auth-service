@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/004-indexes-users.yaml
   - include:
       file: db/changelog/005-triggers.yaml
+  - include:
+      file: db/changelog/006-email-tokens.yaml

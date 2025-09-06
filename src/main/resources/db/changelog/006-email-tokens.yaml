@@ -1,0 +1,54 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-email-tokens
+      author: TokarevaOlga
+      changes:
+          - createTable:
+                tableName: email_tokens
+                columns:
+                    - column:
+                          name: id
+                          type: BIGSERIAL
+                          constraints:
+                              primaryKey: true
+                              nullable: false
+                    - column:
+                          name: user_id
+                          type: BIGINT
+                          constraints:
+                              nullable: false
+                    - column:
+                          name: token
+                          type: UUID
+                          constraints:
+                              nullable: false
+                              unique: true
+                    - column:
+                          name: expires_at
+                          type: TIMESTAMP
+                          constraints:
+                              nullable: false
+                    - column:
+                          name: used
+                          type: BOOLEAN
+                          defaultValueBoolean: false
+                          constraints:
+                              nullable: false
+                    - column:
+                          name: type
+                          type: VARCHAR(255)
+                          constraints:
+                              nullable: false
+          - addForeignKeyConstraint:
+                baseTableName: email_tokens
+                baseColumnNames: user_id
+                referencedTableName: users
+                referencedColumnNames: id
+                onDelete: CASCADE
+                constraintName: fk_email_tokens_user
+          - createIndex:
+                indexName: idx_email_tokens_token
+                tableName: email_tokens
+                columns:
+                    - column:
+                          name: token
