@@ -10,6 +10,5 @@ public interface AuthService {
     User register(RegistrationRequestDto registrationRequestDto);
     User activateAccount(String token);
     LoginResponseDto login(LoginRequestDto loginRequestDto);
-    RefreshToken generateAndSaveRefreshToken(User user);
     void logout(String refreshToken);
 }

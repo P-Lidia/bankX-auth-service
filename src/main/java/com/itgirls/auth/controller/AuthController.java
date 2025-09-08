@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import com.itgirls.auth.dto.LoginRequestDto;
 import com.itgirls.auth.dto.LoginResponseDto;
 
-import java.time.Duration;
-
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -58,5 +56,5 @@ public class AuthController {
     return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
             .build();
-}
+    }
 }

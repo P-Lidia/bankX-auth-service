@@ -2,7 +2,6 @@ package com.itgirls.auth.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.Instant;
 
 @Entity

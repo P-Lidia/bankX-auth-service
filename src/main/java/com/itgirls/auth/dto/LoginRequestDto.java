@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LoginRequestDto {
 
-
     @NotBlank(message = "Field cannot be empty")
     @Email(message = "Email must be valid")
     private String email;

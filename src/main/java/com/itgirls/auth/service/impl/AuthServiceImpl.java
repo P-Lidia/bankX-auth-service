@@ -101,23 +101,10 @@ public class AuthServiceImpl implements AuthService {
         throw new BadCredentialsException("Invalid email or password");
     }
     String accessToken = jwtUtil.generateAccessToken(user);
-    RefreshToken refreshToken = generateAndSaveRefreshToken(user);
+    RefreshToken refreshToken = jwtUtil.generateAndSaveRefreshToken(user);
     return new LoginResponseDto(
             accessToken,
-            refreshToken.getTokenValue()
-    );
-    }
-
-    @Transactional
-    @Override
-    public RefreshToken generateAndSaveRefreshToken(User user) {
-        RefreshToken refreshToken = jwtUtil.generateRefreshToken(user);
-        return saveRefreshToken(refreshToken);
-    }
-
-    private RefreshToken saveRefreshToken(RefreshToken refreshToken) {
-        refreshTokenRepository.deleteByUser(refreshToken.getUser());
-        return refreshTokenRepository.save(refreshToken);
+            refreshToken.getTokenValue());
     }
 
     @Override
