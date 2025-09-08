@@ -23,6 +23,8 @@ public class AuthServiceImpl implements AuthService {
     private final EmailTokenRepository emailTokenRepository;
     private final PasswordEncoder passwordEncoder;
     final private UserMapper userMapper;
+    private static final String TOKEN_TYPE_ACTIVATION = "activation";
+    private static final int TOKEN_EXPIRATION_DAYS = 1;
 
     @Override
     @Transactional
@@ -46,9 +48,9 @@ public class AuthServiceImpl implements AuthService {
         EmailToken emailToken = EmailToken.builder()
                 .userId(savedUser.getId())
                 .token(activationToken)
-                .expiresAt(LocalDateTime.now().plusDays(1)) // Токен действителен 1 день
+                .expiresAt(LocalDateTime.now().plusDays(TOKEN_EXPIRATION_DAYS)) // Токен действителен 1 день
                 .used(false)
-                .type("activation")
+                .type(TOKEN_TYPE_ACTIVATION)
                 .build();
 
         emailTokenRepository.save(emailToken);
