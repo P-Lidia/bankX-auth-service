@@ -109,12 +109,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Transactional
+    @Override
     public RefreshToken generateAndSaveRefreshToken(User user) {
         RefreshToken refreshToken = jwtUtil.generateRefreshToken(user);
         return saveRefreshToken(refreshToken);
     }
 
-    public RefreshToken saveRefreshToken(RefreshToken refreshToken) {
+    private RefreshToken saveRefreshToken(RefreshToken refreshToken) {
         refreshTokenRepository.deleteByUser(refreshToken.getUser());
         return refreshTokenRepository.save(refreshToken);
     }

@@ -7,8 +7,7 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "refresh_tokens")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class RefreshToken {
@@ -25,12 +24,6 @@ public class RefreshToken {
 
     @Column(nullable = false)
     private Instant expiryDate;
-
-    public RefreshToken(String token, User user, Instant expiryDate) {
-        this.tokenValue = token;
-        this.user = user;
-        this.expiryDate = expiryDate;
-    }
 
     public boolean isExpired() {
         return Instant.now().isAfter(expiryDate);

@@ -29,12 +29,14 @@ public class AuthController {
         User user = authService.activateAccount(token);
         return ResponseEntity.ok(user);
     }
+
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login
             (@Valid @RequestBody LoginRequestDto loginRequestDto) {
         LoginResponseDto loginResponseDto = authService.login(loginRequestDto);
         return ResponseEntity.ok(loginResponseDto);
     }
+
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authHeader) {
         authService.logout(authHeader);
