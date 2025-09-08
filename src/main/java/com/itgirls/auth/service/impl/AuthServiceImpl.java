@@ -123,8 +123,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void logout(String refreshToken) {
-        if (!refreshTokenRepository.existsByToken(refreshToken)) {
+        if (!refreshTokenRepository.existsByTokenValue(refreshToken)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Refresh token not found");        }
-        refreshTokenRepository.deleteByToken(refreshToken);
+        refreshTokenRepository.deleteByTokenValue(refreshToken);
     }
 }

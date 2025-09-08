@@ -7,8 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
-    void deleteByToken(String token);
+    void deleteByTokenValue(String tokenValue);
     void deleteByUser(User user);
-    boolean existsByToken(String token);
-    RefreshToken save(RefreshToken refreshToken);
+    boolean existsByTokenValue(String tokenValue);
 }
