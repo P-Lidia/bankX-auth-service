@@ -8,18 +8,22 @@ import java.time.Duration;
 
 @Component
 public class CookieUtil {
-    public ResponseCookie createRefreshCookie(String refreshToken) {
-        return ResponseCookie.from("refreshToken", refreshToken)
+    public ResponseCookie createCookie(String name, String value, long maxAge) {
+        return ResponseCookie.from(name, value)
                 .httpOnly(true)
                 .secure(true)
                 .path("/auth/refresh")
                 .sameSite("Strict")
-                .maxAge(Duration.ofDays(7))
+                .maxAge(maxAge)
                 .build();
     }
 
-    public void setRefreshCookie(HttpServletResponse response, String refreshToken) {
-        ResponseCookie cookie = createRefreshCookie(refreshToken);
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    public ResponseCookie createRefreshCookie(String token) {
+        return createCookie("refreshToken", token, Duration.ofDays(7).toSeconds());
     }
+
+    public ResponseCookie createLogoutCookie() {
+        return createCookie("refreshToken", "", 0);
+    }
+
 }

@@ -2,7 +2,9 @@ package com.itgirls.auth.util;
 
 import com.itgirls.auth.entity.RefreshToken;
 import com.itgirls.auth.entity.User;
+import org.springframework.stereotype.Component;
 
+@Component
 public class JwtUtil {
     public String generateAccessToken(User user) {
         return "";
