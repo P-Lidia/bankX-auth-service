@@ -8,10 +8,14 @@ import java.time.Duration;
 
 @Component
 public class CookieUtil {
+
+    private static final long REFRESH_TOKEN_MAX_AGE = Duration.ofDays(7).toSeconds();
+    private static final long LOGOUT_MAX_AGE = 0;
+
     public ResponseCookie createCookie(String name, String value, long maxAge) {
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false) // TODO: поменять флаг на true для прода
                 .path("/auth/refresh")
                 .sameSite("Strict")
                 .maxAge(maxAge)
@@ -19,11 +23,11 @@ public class CookieUtil {
     }
 
     public ResponseCookie createRefreshCookie(String token) {
-        return createCookie("refreshToken", token, Duration.ofDays(7).toSeconds());
+        return createCookie("refreshToken", token, REFRESH_TOKEN_MAX_AGE);
     }
 
     public ResponseCookie createLogoutCookie() {
-        return createCookie("refreshToken", "", 0);
+        return createCookie("refreshToken", "", LOGOUT_MAX_AGE);
     }
 
 }
