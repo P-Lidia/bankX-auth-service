@@ -31,4 +31,5 @@ public class EmailToken {
 
     @Column(name = "used", nullable = false)
     private Boolean used;
+
 }

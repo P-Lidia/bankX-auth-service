@@ -45,4 +45,6 @@ public class User {
 
     @Column(name = "updated_at", nullable = false, insertable = false)
     private LocalDateTime updatedAt;
+
+
 }
