@@ -1,6 +1,11 @@
 package com.itgirls.auth.service.impl;
 
+import com.itgirls.auth.dto.ApiResponse;
+import com.itgirls.auth.dto.ForgotPasswordRequestDTO;
+import com.itgirls.auth.dto.LoginRequestDto;
+import com.itgirls.auth.dto.LoginResponseDto;
 import com.itgirls.auth.dto.RegistrationRequestDto;
+import com.itgirls.auth.dto.ResetPasswordRequestDTO;
 import com.itgirls.auth.entity.EmailToken;
 import com.itgirls.auth.entity.RefreshToken;
 import com.itgirls.auth.entity.User;
@@ -9,19 +14,20 @@ import com.itgirls.auth.repository.EmailTokenRepository;
 import com.itgirls.auth.repository.RefreshTokenRepository;
 import com.itgirls.auth.repository.UserRepository;
 import com.itgirls.auth.service.AuthService;
+import com.itgirls.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.itgirls.auth.dto.LoginRequestDto;
-import com.itgirls.auth.dto.LoginResponseDto;
-import org.springframework.security.authentication.BadCredentialsException;
-import com.itgirls.auth.util.JwtUtil;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -32,8 +38,9 @@ public class AuthServiceImpl implements AuthService {
     final private UserMapper userMapper;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
-  
+
     private static final String TOKEN_TYPE_ACTIVATION = "activation";
+    private static final String TOKEN_TYPE_RECOVERY_PASSWORD = "recovery_password";
     private static final int TOKEN_EXPIRATION_DAYS = 1;
 
     @Override
@@ -98,23 +105,51 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponseDto login(LoginRequestDto loginRequestDto) {
-    User user = userRepository.findByEmail(loginRequestDto.getEmail())
-            .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
-    if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPasswordHash())) {
-        throw new BadCredentialsException("Invalid email or password");
-    }
-    String accessToken = jwtUtil.generateAccessToken(user);
-    RefreshToken refreshToken = jwtUtil.generateAndSaveRefreshToken(user);
-    return new LoginResponseDto(
-            accessToken,
-            refreshToken.getTokenValue());
+        User user = userRepository.findByEmail(loginRequestDto.getEmail())
+                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
+        if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPasswordHash())) {
+            throw new BadCredentialsException("Invalid email or password");
+        }
+        String accessToken = jwtUtil.generateAccessToken(user);
+        RefreshToken refreshToken = jwtUtil.generateAndSaveRefreshToken(user);
+        return new LoginResponseDto(
+                accessToken,
+                refreshToken.getTokenValue());
     }
 
     @Override
     @Transactional
     public void logout(String refreshToken) {
         if (!refreshTokenRepository.existsByTokenValue(refreshToken)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Refresh token not found");        }
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Refresh token not found");
+        }
         refreshTokenRepository.deleteByTokenValue(refreshToken);
+    }
+
+
+    @Override
+    public ApiResponse requestPasswordReset(ForgotPasswordRequestDTO request) {
+        User user = findUserByEmail(request.getEmail());
+        String activationToken = generateToken(user, TOKEN_TYPE_RECOVERY_PASSWORD);
+
+        // TODO: отправка события в Kafka notifications.reset.password.events
+
+        log.info("Password reset token generated for user id={}", user.getId());
+        return new ApiResponse("Password reset link sent");
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse resetPassword(ResetPasswordRequestDTO request) {
+        EmailToken emailToken = findAndValidateEmailToken(request.getToken());
+        User user = findUserById(emailToken.getUserId());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        userRepository.save(user);
+
+        emailToken.setUsed(true);
+        emailTokenRepository.save(emailToken);
+
+        log.info("New password for user id={} saved", user.getId());
+        return new ApiResponse("Password successfully saved");
     }
 }
