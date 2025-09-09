@@ -17,5 +17,5 @@ public class ResetPasswordRequestDTO {
     String password;
 
     @NotBlank(message = "Token must not be blank")
-    String UuidToken;
+    String emailToken;
 }

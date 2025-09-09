@@ -58,19 +58,8 @@ public class AuthServiceImpl implements AuthService {
 
         User savedUser = userRepository.save(user);
 
-        // Генерация токена активации
-        String activationToken = UUID.randomUUID().toString();
-
-        // Сохранение токена в таблицу email_tokens
-        EmailToken emailToken = EmailToken.builder()
-                .userId(savedUser.getId())
-                .token(activationToken)
-                .expiresAt(LocalDateTime.now().plusDays(TOKEN_EXPIRATION_DAYS)) // Токен действителен 1 день
-                .used(false)
-                .type(TOKEN_TYPE_ACTIVATION)
-                .build();
-
-        emailTokenRepository.save(emailToken);
+        // Генерация токена активации и сохранение токена в таблицу email_tokens
+        String activationToken = generateToken(savedUser, TOKEN_TYPE_ACTIVATION);
 
         // TODO: отправка события USER_REGISTERED в Kafka для Notification Service
 
@@ -80,25 +69,16 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public User activateAccount(String token) {
-        EmailToken emailToken = emailTokenRepository.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid or expired activation token"));
+        // Поиск токена и проверка: если токен уже использован или истек
+        EmailToken emailToken = findAndValidateEmailToken(token);
 
-        // Проверка: если токен уже использован или истек
-        if (emailToken.getUsed() || emailToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Token has already been used or expired");
-        }
-
-        User user = userRepository.findById(emailToken.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
+        User user = findUserById(emailToken.getUserId());
         user.setStatus(User.Status.ACTIVE);
         User activatedUser = userRepository.save(user);
 
         // Отметить токен как использованный
         emailToken.setUsed(true);
         emailTokenRepository.save(emailToken);
-
-        // TODO: отправка события USER_ACTIVATED в Kafka для Notification Service
 
         return activatedUser;
     }
@@ -126,10 +106,12 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenRepository.deleteByTokenValue(refreshToken);
     }
 
-
     @Override
     public ApiResponse requestPasswordReset(ForgotPasswordRequestDTO request) {
-        User user = findUserByEmail(request.getEmail());
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> {
+                    return new UserNotFoundByEmailException();
+                });
         String activationToken = generateToken(user, TOKEN_TYPE_RECOVERY_PASSWORD);
 
         // TODO: отправка события в Kafka notifications.reset.password.events
@@ -141,7 +123,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public ApiResponse resetPassword(ResetPasswordRequestDTO request) {
-        EmailToken emailToken = findAndValidateEmailToken(request.getToken());
+        EmailToken emailToken = findAndValidateEmailToken(request.getEmailToken());
+
         User user = findUserById(emailToken.getUserId());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
@@ -151,5 +134,46 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("New password for user id={} saved", user.getId());
         return new ApiResponse("Password successfully saved");
+    }
+
+    private User findUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    return new UserNotFoundByIdException(userId);
+                });
+    }
+
+    private EmailToken findAndValidateEmailToken(String token) {
+        EmailToken emailToken = emailTokenRepository.findByToken(token)
+                .orElseThrow(() -> {
+                    return new TokenNotFoundException();
+                });
+
+        // Проверка: если токен уже использован или истек
+        if (emailToken.getUsed() || emailToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            log.warn("Token type={} for user id={} already used or expired",
+                    emailToken.getType(), emailToken.getUserId());
+            throw new InvalidTokenException(emailToken.getType(), emailToken.getUserId());
+        }
+        return emailToken;
+    }
+
+    private String generateToken(User user, String type) {
+        // Генерация токена
+        String token = UUID.randomUUID().toString();
+
+        // Сохранение токена в таблицу email_tokens
+        EmailToken emailToken = EmailToken.builder()
+                .userId(user.getId())
+                .token(token)
+                .expiresAt(LocalDateTime.now().plusDays(TOKEN_EXPIRATION_DAYS)) // Токен действителен 1 день
+                .used(false)
+                .type(type)
+                .build();
+        emailTokenRepository.save(emailToken);
+
+        log.info("EmailToken of type={} generated for user id={}, expires at {}",
+                type, user.getId(), emailToken.getExpiresAt());
+        return token;
     }
 }
