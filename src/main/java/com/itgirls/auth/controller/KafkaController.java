@@ -14,9 +14,15 @@ public class KafkaController {
 
     private final KafkaProducer kafkaProducer;
 
-    @PostMapping("/publish")
+    @PostMapping("/sendRegistration")
     public ResponseEntity<String> sendStandardUser(@RequestBody UserEventDto userEventDto) {
-        kafkaProducer.sendEvent(userEventDto.getId(), userEventDto);
+        kafkaProducer.sendRegistrationEvent(userEventDto.getEmail(), userEventDto);
+        return ResponseEntity.ok("User sent via standard producer");
+    }
+
+    @PostMapping("/sendResetPassword")
+    public ResponseEntity<String> sendResetPassword (@RequestBody UserEventDto userEventDto) {
+        kafkaProducer.sendResetPasswordEvent(userEventDto.getEmail(), userEventDto);
         return ResponseEntity.ok("User sent via standard producer");
     }
 }

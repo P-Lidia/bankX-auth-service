@@ -4,16 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserEventDto {
 
-    private String id;
-    private String name;
-    private String surname;
     private String email;
-    private String activationKey;
-
-
+    private String firstName;
+    private String lastName;
+    private UUID activationKey;
 }

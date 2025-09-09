@@ -18,10 +18,12 @@ kafka:
       retries: 3 #number of retries in case of error
       enable-idempotence: true #protection against duplicates
 
+
 app:
   kafka:
     topics:
-      user-events: user-events        # Topic for user events
+      user-registration-events: notifications.registration.events        # Topic for user reg events
+      user-reset-events: notifications.reset.password.events #Topivc for password reset events
       dead-letter-queue: dlq-topic    # Topic for "dead" events
     retry:
       max-attempts: 3                 # max number of retries

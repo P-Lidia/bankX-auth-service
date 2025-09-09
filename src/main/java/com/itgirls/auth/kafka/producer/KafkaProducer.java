@@ -14,17 +14,30 @@ public class KafkaProducer {
 
     private KafkaTemplate<String, Object> kafkaTemplate;
     @Value("${app.kafka.topics.user-events}")
-    private String userEventsTopic;
-
+    private String userRegistrationTopic;
     @Value("${app.kafka.topics.dead-letter-queue}")
     private String dlqTopic;
+    @Value ("notifications.reset.password.events")
+    private String resetPasswordTopic;
 
-    public void sendEvent(String key, UserEventDto userEventDto) {
+
+    //sending event to userRegistrationTopic
+    public void sendRegistrationEvent(String key, UserEventDto userEventDto) {
         try {
-            kafkaTemplate.send(userEventsTopic, key, userEventDto);
-            log.info("Standard producer sent to {}: key={}, value={}", userEventsTopic, key, userEventDto);
+            kafkaTemplate.send(userRegistrationTopic, key, userEventDto);
+            log.info("Standard producer sent to {}: key={}, value={}", userRegistrationTopic, key, userEventDto);
         } catch (Exception e) {
-            log.error("Error sending to {}, sending to DLQ: {}", userEventsTopic, e.getMessage());
+            log.error("Error sending to {}, sending to DLQ: {}", userRegistrationTopic, e.getMessage());
+        }
+    }
+
+    //sending event to resetPasswordTopic
+    public void sendResetPasswordEvent(String key, UserEventDto userEventDto) {
+        try {
+            kafkaTemplate.send(resetPasswordTopic, key, userEventDto);
+            log.info("Standard producer sent to {}: key={}, value={}",resetPasswordTopic , key, userEventDto);
+        } catch (Exception e) {
+            log.error("Error sending to {}, sending to DLQ: {}", resetPasswordTopic, e.getMessage());
         }
     }
 

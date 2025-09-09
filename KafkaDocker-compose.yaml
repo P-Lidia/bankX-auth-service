@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  kafka:
+    image: apache/kafka:3.8.0
+    container_name: kafka
+    ports:
+      - 9092:9092 # Порт для клиентских подключений (Kafka listeners для приложений: продюсеры, консьюмеры)
+    environment:
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://host.docker.internal:909
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 #  replication.factor — сколько копий (реплик) каждой партиции хранить.
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 500    # Задержка перед началом ребалансировки consumer group'ов (в миллисекундах)
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1  # Минимальное число in-sync реплик для логов транзакций
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 # Репликация логов транзакций
+
