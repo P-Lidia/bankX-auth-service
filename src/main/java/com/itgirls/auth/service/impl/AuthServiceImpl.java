@@ -4,6 +4,8 @@ import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.entity.EmailToken;
 import com.itgirls.auth.entity.RefreshToken;
 import com.itgirls.auth.entity.User;
+import com.itgirls.auth.exception.InvalidCredentialsException;
+import com.itgirls.auth.exception.RefreshTokenNotFoundException;
 import com.itgirls.auth.mapper.UserMapper;
 import com.itgirls.auth.repository.EmailTokenRepository;
 import com.itgirls.auth.repository.RefreshTokenRepository;
@@ -101,7 +103,7 @@ public class AuthServiceImpl implements AuthService {
     User user = userRepository.findByEmail(loginRequestDto.getEmail())
             .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
     if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPasswordHash())) {
-        throw new BadCredentialsException("Invalid email or password");
+        throw new InvalidCredentialsException();
     }
     String accessToken = jwtUtil.generateAccessToken(user);
     RefreshToken refreshToken = jwtUtil.generateAndSaveRefreshToken(user);
@@ -114,7 +116,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void logout(String refreshToken) {
         if (!refreshTokenRepository.existsByTokenValue(refreshToken)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Refresh token not found");        }
+            throw new RefreshTokenNotFoundException();        }
         refreshTokenRepository.deleteByTokenValue(refreshToken);
     }
 }

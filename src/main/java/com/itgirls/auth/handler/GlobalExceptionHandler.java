@@ -48,7 +48,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RefreshTokenNotFoundException.class)
     public ResponseEntity<ApiResponse> handleRefreshTokenNotFound(RefreshTokenNotFoundException ex) {
-        return buildResponse(HttpStatus.UNAUTHORIZED, ex);
+        return buildResponse(HttpStatus.NOT_FOUND, ex);
     }
 
      @ExceptionHandler(InvalidCredentialsException.class)
