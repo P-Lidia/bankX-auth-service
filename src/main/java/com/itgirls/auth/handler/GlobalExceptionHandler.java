@@ -32,7 +32,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ApiResponse> handleInvalidToken(InvalidTokenException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex);
+        log.warn("Token type={} for user id={} already used or expired",
+                ex.getTokenType(), ex.getUserId());
+
+        // Клиенту безопасное сообщение
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse("Token already used or expired"));
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
