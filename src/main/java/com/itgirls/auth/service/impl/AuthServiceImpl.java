@@ -32,6 +32,9 @@ public class AuthServiceImpl implements AuthService {
     final private UserMapper userMapper;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
+  
+    private static final String TOKEN_TYPE_ACTIVATION = "activation";
+    private static final int TOKEN_EXPIRATION_DAYS = 1;
 
     @Override
     @Transactional
@@ -42,8 +45,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Создание пользователя через Mapper
-        User user = userMapper.toEntity(registrationRequestDto);
-        user.setPasswordHash(passwordEncoder.encode(registrationRequestDto.getPassword()));
+        User user = userMapper.toEntity(registrationRequestDto, passwordEncoder);
         user.setStatus(User.Status.PENDING);
         user.setCreatedAt(LocalDateTime.now());
 
@@ -56,8 +58,9 @@ public class AuthServiceImpl implements AuthService {
         EmailToken emailToken = EmailToken.builder()
                 .userId(savedUser.getId())
                 .token(activationToken)
-                .expiresAt(LocalDateTime.now().plusDays(1)) // Токен действителен 1 день
+                .expiresAt(LocalDateTime.now().plusDays(TOKEN_EXPIRATION_DAYS)) // Токен действителен 1 день
                 .used(false)
+                .type(TOKEN_TYPE_ACTIVATION)
                 .build();
 
         emailTokenRepository.save(emailToken);
