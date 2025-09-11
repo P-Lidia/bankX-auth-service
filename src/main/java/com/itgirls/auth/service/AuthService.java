@@ -14,5 +14,5 @@ public interface AuthService {
     LoginResponseDto login(LoginRequestDto loginRequestDto);
     void logout(String refreshToken);
     ApiResponse requestPasswordReset(ForgotPasswordRequestDTO request);
-    ApiResponse  resetPassword(ResetPasswordRequestDTO request);
+    ApiResponse  resetPassword(ResetPasswordRequestDTO request, String token);
 }

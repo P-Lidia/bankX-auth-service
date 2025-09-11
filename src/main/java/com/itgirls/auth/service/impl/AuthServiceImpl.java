@@ -122,8 +122,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public ApiResponse resetPassword(ResetPasswordRequestDTO request) {
-        EmailToken emailToken = findAndValidateEmailToken(request.getEmailToken());
+    public ApiResponse resetPassword(ResetPasswordRequestDTO request, String token) {
+        EmailToken emailToken = findAndValidateEmailToken(token);
 
         User user = findUserById(emailToken.getUserId());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
