@@ -20,7 +20,7 @@ public class LoginRequestDto {
     @NotBlank(message = "Field cannot be empty")
     @Size(min = 10, message = "Password must be at least 10 characters long")
     @Pattern(
-            regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@#$%^&+=!]).+$",
+            regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+$",
             message = "Password must contain at least one uppercase letter, one digit and one special character"
     )
     private String password;
