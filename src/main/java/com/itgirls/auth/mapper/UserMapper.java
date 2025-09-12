@@ -16,6 +16,7 @@ public interface UserMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "role", ignore = true)
     @Mapping(target = "password", expression = "java(passwordEncoder.encode(userCreateDto.getPassword()))")
     User toEntity(RegistrationRequestDto registrationRequestDto, @Context PasswordEncoder passwordEncoder);
 
