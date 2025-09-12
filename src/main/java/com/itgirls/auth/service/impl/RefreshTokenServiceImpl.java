@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenServiceImpl implements RefreshTokenService {
@@ -18,7 +20,12 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Transactional
     public RefreshToken generateAndSaveRefreshToken(User user) {
-        RefreshToken refreshToken = jwtUtil.generateRefreshToken(user);
+        String valueToken = jwtUtil.generateRefreshToken(user);
+        RefreshToken refreshToken = RefreshToken.builder()
+                .tokenValue(valueToken)
+                .user(user)
+                .expiryDate(Instant.now().plusMillis(jwtUtil.getJwtRefreshTokenExpiration()))
+                .build();
         return saveRefreshToken(refreshToken);
     }
 
