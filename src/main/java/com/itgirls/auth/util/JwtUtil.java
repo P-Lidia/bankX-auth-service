@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+@Data
 public class JwtUtil {
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
@@ -27,6 +28,7 @@ public class JwtUtil {
     @Value("${jwt.refresh.lifetime}")
     private Long jwtRefreshTokenExpiration;
     private final Map<String, String> refreshTokens = new ConcurrentHashMap<>();
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public JwtUtil() throws Exception {
         KeyPair keyPair = generatedKeyPair();
@@ -120,4 +122,14 @@ public class JwtUtil {
 
     }
 
+    @Transactional
+    public RefreshToken generateAndSaveRefreshToken(User user) {
+        RefreshToken refreshToken = generateRefreshToken(user);
+        return saveRefreshToken(refreshToken);
+    }
+
+    private RefreshToken saveRefreshToken(RefreshToken refreshToken) {
+        refreshTokenRepository.deleteByUser(refreshToken.getUser());
+        return refreshTokenRepository.save(refreshToken);
+    }
 }
