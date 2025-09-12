@@ -1,10 +1,9 @@
 package com.itgirls.auth.service.impl;
 
 import com.itgirls.auth.dto.LoginRequestDto;
-import com.itgirls.auth.dto.LoginResponseDto;
 import com.itgirls.auth.dto.RegistrationRequestDto;
+import com.itgirls.auth.dto.TokenResponseDto;
 import com.itgirls.auth.entity.EmailToken;
-import com.itgirls.auth.entity.RefreshToken;
 import com.itgirls.auth.entity.Role;
 import com.itgirls.auth.entity.User;
 import com.itgirls.auth.mapper.UserMapper;
@@ -109,17 +108,19 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public LoginResponseDto login(LoginRequestDto loginRequestDto) {
+    public TokenResponseDto login(LoginRequestDto loginRequestDto) {
         User user = userRepository.findByEmail(loginRequestDto.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
         if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid email or password");
         }
-        String accessToken = jwtUtil.generateAccessToken(user);
-        RefreshToken refreshToken = refreshTokenService.generateAndSaveRefreshToken(user);
-        return new LoginResponseDto(
+
+        String accessToken = jwtUtil.generateAccessToken(userMapper.toUserJwtDto(user));
+        String refreshToken = refreshTokenService.generateAndSaveRefreshToken(user);
+
+        return new TokenResponseDto(
                 accessToken,
-                refreshToken.getTokenValue());
+                refreshToken);
     }
 
     @Override

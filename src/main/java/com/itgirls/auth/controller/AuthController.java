@@ -1,7 +1,7 @@
 package com.itgirls.auth.controller;
 
 import com.itgirls.auth.dto.RegistrationRequestDto;
-import com.itgirls.auth.dto.TokenResponseDto;
+import com.itgirls.auth.dto.TokenRefreshResponseDto;
 import com.itgirls.auth.entity.User;
 import com.itgirls.auth.service.AuthService;
 import com.itgirls.auth.util.JwtUtil;
@@ -16,7 +16,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.itgirls.auth.dto.LoginRequestDto;
-import com.itgirls.auth.dto.LoginResponseDto;
+import com.itgirls.auth.dto.TokenResponseDto;
 
 import java.util.List;
 
@@ -78,14 +78,14 @@ public class AuthController {
                 .maxAge(jwtUtil.getJwtRefreshTokenExpiration() / 1000)
                 .build();
         response.setHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-        return ResponseEntity.ok(new TokenResponseDto(newAccessToken));
+        return ResponseEntity.ok(new TokenRefreshResponseDto(newAccessToken));
 
     }
 
     @PostMapping("/login")
     public ResponseEntity<String> login(
             @Valid @RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
-        LoginResponseDto loginResponseDto = authService.login(loginRequestDto);
+        TokenResponseDto loginResponseDto = authService.login(loginRequestDto);
         ResponseCookie refreshCookie = cookieUtil.createRefreshCookie(
                 loginResponseDto.getRefreshToken());
         return ResponseEntity.ok()

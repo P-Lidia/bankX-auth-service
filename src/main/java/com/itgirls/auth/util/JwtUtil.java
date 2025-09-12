@@ -1,6 +1,7 @@
 package com.itgirls.auth.util;
 
-import com.itgirls.auth.entity.User;
+
+import com.itgirls.auth.dto.UserJwtDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -50,22 +51,22 @@ public class JwtUtil {
         return keyPairGenerator.generateKeyPair();
     }
 
-    public String generateAccessToken(User user) {
-        return generateToken(user, TOKEN_TYPE_ACCESS, jwtAccessTokenExpiration);
+    public String generateAccessToken(UserJwtDto userJwtDto) {
+        return generateToken(userJwtDto, TOKEN_TYPE_ACCESS, jwtAccessTokenExpiration);
     }
 
-    public String generateRefreshToken(User user) {
-        return generateToken(user, TOKEN_TYPE_REFRESH, jwtRefreshTokenExpiration);
+    public String generateRefreshToken(UserJwtDto userJwtDto) {
+        return generateToken(userJwtDto, TOKEN_TYPE_REFRESH, jwtRefreshTokenExpiration);
     }
 
-    private String generateToken(User user, String tokenType, long expiration) {
+    private String generateToken(UserJwtDto userJwtDto, String tokenType, long expiration) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put(CLAIMS_USER_ID, user.getId());
+        claims.put(CLAIMS_USER_ID, userJwtDto.getId());
         claims.put(CLAIMS_TOKEN_TYPE, tokenType);
-        claims.put(CLAIMS_USER_ROLE, user.getRole().getCode());
+        claims.put(CLAIMS_USER_ROLE, userJwtDto.getRole());
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(user.getName())
+                .setSubject(userJwtDto.getName())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
@@ -88,7 +89,7 @@ public class JwtUtil {
                     .parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
-            return false;
+           throw new BadCredentialsException("Invalid refresh token");
         }
     }
 
