@@ -30,6 +30,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
+    private static final String TOKEN_TYPE_ACTIVATION = "activation";
+    private static final int TOKEN_EXPIRATION_DAYS = 1;
+
     private final UserRepository userRepository;
     private final EmailTokenRepository emailTokenRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -40,10 +43,6 @@ public class AuthServiceImpl implements AuthService {
 
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
-
-
-    private static final String TOKEN_TYPE_ACTIVATION = "activation";
-    private static final int TOKEN_EXPIRATION_DAYS = 1;
 
     @Override
     @Transactional

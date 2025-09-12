@@ -1,14 +1,14 @@
 package com.itgirls.auth.util;
 
-import com.itgirls.auth.entity.RefreshToken;
 import com.itgirls.auth.entity.User;
-import com.itgirls.auth.repository.RefreshTokenRepository;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -16,11 +16,19 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Component
 public class JwtUtil {
+
+    private static final String TOKEN_TYPE_ACCESS = "access";
+    private static final String TOKEN_TYPE_REFRESH = "refresh";
+    private static final String CLAIMS_USER_ID = "userId";
+    private static final String CLAIMS_TOKEN_TYPE = "type";
+    private static final String CLAIMS_USER_ROLE = "roles";
+    public static final String RSA_ALGORITHM = "RSA";
+    public static final int RSA_KEY_SIZE = 2048;
+
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
 
@@ -37,41 +45,39 @@ public class JwtUtil {
     }
 
     private KeyPair generatedKeyPair() throws Exception {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(2048);
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(RSA_ALGORITHM);
+        keyPairGenerator.initialize(RSA_KEY_SIZE);
         return keyPairGenerator.generateKeyPair();
     }
 
-    public String generateAccessToken(User user, List<String> roles) {
+    public String generateAccessToken(User user) {
+        return generateToken(user, TOKEN_TYPE_ACCESS, jwtAccessTokenExpiration);
+    }
+
+    public String generateRefreshToken(User user) {
+        return generateToken(user, TOKEN_TYPE_REFRESH, jwtRefreshTokenExpiration);
+    }
+
+    private String generateToken(User user, String tokenType, long expiration) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", user.getId());   // храним в токене
-        claims.put("type", "access");
-        claims.put("roles", roles);
+        claims.put(CLAIMS_USER_ID, user.getId());
+        claims.put(CLAIMS_TOKEN_TYPE, tokenType);
+        claims.put(CLAIMS_USER_ROLE, user.getRole().getCode());
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(user.getName())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtAccessTokenExpiration))
-                .signWith(privateKey, SignatureAlgorithm.RS256)
-                .compact();
-    }
-
-    public String generateRefreshToken(Long userId, String username, List<String> roles) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", userId);
-        claims.put("type", "refresh");
-        claims.put("roles", roles);
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(username)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtRefreshTokenExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(privateKey, SignatureAlgorithm.RS256)
                 .compact();
     }
 
     public String getSubjectFromToken(String token) {
-        return getClaims(token).getSubject();
+        String subject = getClaims(token).getSubject();
+        if (subject != null && !subject.isBlank()) {
+            return subject;
+        }
+        throw new BadCredentialsException("Invalid JWT token");
     }
 
     public boolean isValid(String token) {
@@ -81,8 +87,6 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token);
             return true;
-        } catch (ExpiredJwtException e) {
-            return false;
         } catch (JwtException e) {
             return false;
         }
@@ -91,8 +95,8 @@ public class JwtUtil {
     public boolean isAccessToken(String token) {
         try {
             Claims claims = getClaims(token);
-            return claims.get("type").equals("access");
-        } catch (Exception e) {
+            return claims.get(CLAIMS_TOKEN_TYPE).equals(TOKEN_TYPE_ACCESS);
+        } catch (JwtException | NullPointerException e) {
             return false;
         }
     }
@@ -100,22 +104,29 @@ public class JwtUtil {
     public boolean isRefreshToken(String token) {
         try {
             Claims claims = getClaims(token);
-            return claims.get("type").equals("refresh");
-        } catch (Exception e) {
+            return claims.get(CLAIMS_TOKEN_TYPE).equals(TOKEN_TYPE_REFRESH);
+        } catch (JwtException | NullPointerException e) {
             return false;
         }
     }
 
     public Claims getClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(publicKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(publicKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (JwtException e) {
+            throw new BadCredentialsException("Invalid JWT token", e);
+        }
     }
 
     public Long getIdFromToken(String token) {
-        Number userIdNum = (Number) getClaims(token).get("userId");
-        return userIdNum != null ? userIdNum.longValue() : null;
+        Long userId = (Long) getClaims(token).get(CLAIMS_USER_ID);
+        if (userId != null) {
+            return userId;
+        }
+        throw new BadCredentialsException("Invalid JWT token");
     }
 }

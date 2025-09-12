@@ -61,11 +61,6 @@
             <artifactId>liquibase-core</artifactId>
             <version>4.33.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>java-jwt</artifactId>
-            <version>4.2.1</version>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -83,7 +78,6 @@
             <version>0.2.0</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
@@ -103,7 +97,6 @@
             <version>0.11.5</version>
             <scope>runtime</scope>
         </dependency>
-
     </dependencies>
     <build>
         <plugins>
@@ -129,11 +122,6 @@
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
                             <version>3.1.4</version>
-
-
-
-
-
                         </path>
                         <!-- Lombok + MapStruct binding -->
                         <path>
