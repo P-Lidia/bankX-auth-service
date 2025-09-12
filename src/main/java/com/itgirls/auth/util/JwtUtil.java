@@ -1,10 +1,14 @@
 package com.itgirls.auth.util;
 
+import com.itgirls.auth.entity.RefreshToken;
 import com.itgirls.auth.entity.User;
+import com.itgirls.auth.repository.RefreshTokenRepository;
 import io.jsonwebtoken.*;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -14,10 +18,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@Data
 public class JwtUtil {
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
@@ -27,14 +29,11 @@ public class JwtUtil {
     @Getter
     @Value("${jwt.refresh.lifetime}")
     private Long jwtRefreshTokenExpiration;
-    private final Map<String, String> refreshTokens = new ConcurrentHashMap<>();
-    private final RefreshTokenRepository refreshTokenRepository;
 
     public JwtUtil() throws Exception {
         KeyPair keyPair = generatedKeyPair();
         this.privateKey = keyPair.getPrivate();
         this.publicKey = keyPair.getPublic();
-
     }
 
     private KeyPair generatedKeyPair() throws Exception {
@@ -118,18 +117,5 @@ public class JwtUtil {
     public Long getIdFromToken(String token) {
         Number userIdNum = (Number) getClaims(token).get("userId");
         return userIdNum != null ? userIdNum.longValue() : null;
-
-
-    }
-
-    @Transactional
-    public RefreshToken generateAndSaveRefreshToken(User user) {
-        RefreshToken refreshToken = generateRefreshToken(user);
-        return saveRefreshToken(refreshToken);
-    }
-
-    private RefreshToken saveRefreshToken(RefreshToken refreshToken) {
-        refreshTokenRepository.deleteByUser(refreshToken.getUser());
-        return refreshTokenRepository.save(refreshToken);
     }
 }
