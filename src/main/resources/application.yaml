@@ -1,5 +1,15 @@
 spring:
-
+  application:
+    name: auth-service
 
   liquibase:
-   change-log: classpath:/db/changelog/master.yaml
+    change-log: classpath:/db/changelog/master.yaml
+
+  jwt:
+    access:
+      lifetime: 900000       # 15 минут
+    refresh:
+      lifetime: 604800000    # 7 дней
+
+server:
+  port: 8081
