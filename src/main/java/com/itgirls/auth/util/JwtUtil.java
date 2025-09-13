@@ -15,6 +15,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +32,7 @@ public class JwtUtil {
     public static final int RSA_KEY_SIZE = 2048;
 
     private final PrivateKey privateKey;
+    @Getter
     private final PublicKey publicKey;
 
     @Value("${jwt.access.lifetime}")
