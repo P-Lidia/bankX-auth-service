@@ -9,12 +9,14 @@ import com.itgirls.auth.repository.RefreshTokenRepository;
 import com.itgirls.auth.service.RefreshTokenService;
 import com.itgirls.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenServiceImpl implements RefreshTokenService {
@@ -50,6 +52,17 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 .build();
         saveRefreshToken(refreshToken);
         return valueToken;
+    }
+
+    @Override
+    @Transactional
+    public void logout(String refreshToken) {
+        if (refreshToken == null) return;
+        if (!refreshTokenRepository.existsByTokenValue(refreshToken)) {
+            log.warn("Logout attempt with non-existent refresh token");
+            return;
+        }
+        refreshTokenRepository.deleteByTokenValue(refreshToken);
     }
 
     private void saveRefreshToken(RefreshToken refreshToken) {

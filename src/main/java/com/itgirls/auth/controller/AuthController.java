@@ -59,7 +59,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
-        authService.logout(refreshToken);
+        refreshTokenService.logout(refreshToken);
         ResponseCookie deleteCookie = cookieUtil.createLogoutCookie();
 
         return ResponseEntity.ok()

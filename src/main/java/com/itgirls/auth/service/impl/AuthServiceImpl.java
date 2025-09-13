@@ -124,15 +124,4 @@ public class AuthServiceImpl implements AuthService {
                 accessToken,
                 refreshToken);
     }
-
-    @Override
-    @Transactional
-    public void logout(String refreshToken) {
-        if (refreshToken == null) return;
-        if (!refreshTokenRepository.existsByTokenValue(refreshToken)) {
-            log.warn("Logout attempt with non-existent refresh token");
-            return;
-        }
-        refreshTokenRepository.deleteByTokenValue(refreshToken);
-    }
 }

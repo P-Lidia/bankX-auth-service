@@ -9,5 +9,4 @@ public interface AuthService {
     User register(RegistrationRequestDto registrationRequestDto);
     User activateAccount(String token);
     TokenResponseDto login(LoginRequestDto loginRequestDto);
-    void logout(String refreshToken);
 }
