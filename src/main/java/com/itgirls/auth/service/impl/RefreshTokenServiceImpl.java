@@ -23,6 +23,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final JwtUtil jwtUtil;
     private final UserMapper userMapper;
 
+    @Override
     public TokenResponseDto refreshTokens(String refreshToken) {
         jwtUtil.isValid(refreshToken);
         RefreshToken tokenEntity = refreshTokenRepository.findByTokenValue(refreshToken)
@@ -37,6 +38,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     @Transactional
+    @Override
     public String generateAndSaveRefreshToken(User user) {
 
         String valueToken = jwtUtil.generateRefreshToken(userMapper.toUserJwtDto(user));

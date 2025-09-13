@@ -15,6 +15,7 @@ import com.itgirls.auth.service.AuthService;
 import com.itgirls.auth.service.RefreshTokenService;
 import com.itgirls.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -126,8 +128,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void logout(String refreshToken) {
+        if (refreshToken == null) return;
         if (!refreshTokenRepository.existsByTokenValue(refreshToken)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Refresh token not found");
+            log.warn("Logout attempt with non-existent refresh token");
+            return;
         }
         refreshTokenRepository.deleteByTokenValue(refreshToken);
     }

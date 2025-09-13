@@ -1,24 +1,27 @@
 package com.itgirls.auth.controller;
 
+import com.itgirls.auth.dto.LoginRequestDto;
 import com.itgirls.auth.dto.RegistrationRequestDto;
-import com.itgirls.auth.dto.TokenRefreshResponseDto;
+import com.itgirls.auth.dto.TokenResponseDto;
 import com.itgirls.auth.entity.User;
 import com.itgirls.auth.service.AuthService;
-import com.itgirls.auth.util.JwtUtil;
-import jakarta.servlet.http.HttpServletRequest;
+import com.itgirls.auth.service.RefreshTokenService;
 import com.itgirls.auth.util.CookieUtil;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.itgirls.auth.dto.LoginRequestDto;
-import com.itgirls.auth.dto.TokenResponseDto;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/auth")
@@ -26,7 +29,7 @@ import java.util.List;
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
     private final CookieUtil cookieUtil;
 
     @PostMapping("/register")
@@ -41,67 +44,33 @@ public class AuthController {
         return ResponseEntity.ok(user);
     }
 
-    @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = null;
-        if (request.getCookies() != null) {
-            for (var cookie : request.getCookies()) {
-                if ("refreshToken".equals(cookie.getName())) {
-                    refreshToken = cookie.getValue();
-                }
-            }
-        }
-        if (refreshToken == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .build();
-        }
-        if (!jwtUtil.isValid(refreshToken)) {
-            return ResponseEntity.status(401).build();
-        }
-        var claims = jwtUtil.getClaims(refreshToken);
-        Long userId = claims.get("userId", Long.class);
-        String username = claims.getSubject();
-        List<String> roles = claims.get("roles", List.class);
-
-        User user = User.builder()
-                .id(userId)
-                .name(username)
-                .build();
-
-        String newAccessToken = jwtUtil.generateAccessToken(user, roles);
-        String newRefreshToken = jwtUtil.generateRefreshToken(userId,username, roles);
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", newRefreshToken)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(jwtUtil.getJwtRefreshTokenExpiration() / 1000)
-                .build();
-        response.setHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-        return ResponseEntity.ok(new TokenRefreshResponseDto(newAccessToken));
-
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
+        TokenResponseDto tokensDTO = authService.login(loginRequestDto);
+        return buildAccessTokenResponse(tokensDTO);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<String> login(
-            @Valid @RequestBody LoginRequestDto loginRequestDto, HttpServletResponse response) {
-        TokenResponseDto loginResponseDto = authService.login(loginRequestDto);
-        ResponseCookie refreshCookie = cookieUtil.createRefreshCookie(
-                loginResponseDto.getRefreshToken());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(loginResponseDto.getAccessToken());
+    @PostMapping("/refresh")
+    public ResponseEntity<String> refreshToken(HttpServletRequest request) {
+        String refreshToken = cookieUtil.getRefreshTokenFromRequest(request);
+        TokenResponseDto tokensDTO = refreshTokenService.refreshTokens(refreshToken);
+        return buildAccessTokenResponse(tokensDTO);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(
-            @CookieValue(value = "refreshToken", required = false) String refreshToken) {
-        if (refreshToken != null) {
+    public ResponseEntity<Void> logout(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
         authService.logout(refreshToken);
+        ResponseCookie deleteCookie = cookieUtil.createLogoutCookie();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+                .build();
     }
-    ResponseCookie deleteCookie = cookieUtil.createLogoutCookie();
-    return ResponseEntity.ok()
-            .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
-            .build();
+
+    private ResponseEntity<String> buildAccessTokenResponse(@NonNull TokenResponseDto tokensDTO) {
+        ResponseCookie refreshCookie = cookieUtil.createRefreshCookie(tokensDTO.getRefreshToken());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(tokensDTO.getAccessToken());
     }
 }
