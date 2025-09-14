@@ -1,6 +1,26 @@
 spring:
+  application:
+    name: auth-service
 
-
+  datasource:
+    #переменные окружения, которые будем задавать в docker-compose.yml
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      #Hibernate будет автоматически обновлять схему базы данных (можно изменить по необходимости)
+      ddl-auto: update
+    #для вывода SQL-запросов в лог (удобно для отладки)
+    show-sql: true
 
   liquibase:
+    #путь к файлу миграций Liquibase
     change-log: classpath:/db/changelog/master.yaml
+
+  kafka:
+    #адрес Kafka, тоже из переменной окружения (нужно задать в docker-compose.yml)
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+
+server:
+    port: 8081
