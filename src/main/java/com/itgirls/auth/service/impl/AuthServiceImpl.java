@@ -6,9 +6,12 @@ import com.itgirls.auth.dto.LoginRequestDto;
 import com.itgirls.auth.dto.LoginResponseDto;
 import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.dto.ResetPasswordRequestDTO;
+import com.itgirls.auth.dto.UserEventDto;
+
 import com.itgirls.auth.entity.EmailToken;
 import com.itgirls.auth.entity.RefreshToken;
 import com.itgirls.auth.entity.User;
+import com.itgirls.auth.kafka.producer.KafkaProducer;
 import com.itgirls.auth.mapper.UserMapper;
 import com.itgirls.auth.repository.EmailTokenRepository;
 import com.itgirls.auth.repository.RefreshTokenRepository;
@@ -38,6 +41,7 @@ public class AuthServiceImpl implements AuthService {
     final private UserMapper userMapper;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final KafkaProducer kafkaProducer;
 
     private static final String TOKEN_TYPE_ACTIVATION = "activation";
     private static final String TOKEN_TYPE_RECOVERY_PASSWORD = "recovery_password";
@@ -61,8 +65,16 @@ public class AuthServiceImpl implements AuthService {
         // Генерация токена активации и сохранение токена в таблицу email_tokens
         String activationToken = generateToken(savedUser, TOKEN_TYPE_ACTIVATION);
 
-        // TODO: отправка события USER_REGISTERED в Kafka для Notification Service
+        //sending registration event to Kafka
+        UserEventDto userEventDto = UserEventDto.builder()
+                .firstName(savedUser.getName())
+                .lastName(savedUser.getSurname())
+                .email(savedUser.getEmail())
+                .activationKey(activationToken)
+                .build();
+        kafkaProducer.sendRegistrationEvent(savedUser.getId().toString(), userEventDto);
 
+        emailTokenRepository.save(emailToken);
         return savedUser;
     }
 
