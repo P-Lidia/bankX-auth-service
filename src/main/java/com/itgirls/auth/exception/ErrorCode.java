@@ -15,7 +15,6 @@ public enum ErrorCode {
     UNKNOWN_ROLE(HttpStatus.BAD_REQUEST,"Unknown role"),
     REFRESH_TOKEN_MISSING(HttpStatus.BAD_REQUEST, "Refresh token is missing");
 
-
     private final HttpStatus httpStatus;
     private final String message;
 }

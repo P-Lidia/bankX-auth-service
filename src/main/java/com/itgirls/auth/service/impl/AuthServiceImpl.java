@@ -102,7 +102,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokenResponseDto login(LoginRequestDto loginRequestDto) {
         User user = userRepository.findByEmail(loginRequestDto.getEmail())
-                .orElseThrow(() -> new ApplicationException(ErrorCode.INVALID_CREDENTIALS));
+                .orElseThrow(() -> new ApplicationException(
+                        ErrorCode.INVALID_CREDENTIALS,
+                        "Invalid login attempt with email: " + loginRequestDto.getEmail()
+                ));
         if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPasswordHash())) {
             throw new ApplicationException(ErrorCode.INVALID_CREDENTIALS);
         }
@@ -118,7 +121,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ApiResponse requestPasswordReset(ForgotPasswordRequestDTO request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(
+                        ErrorCode.USER_NOT_FOUND,
+                        String.format("User not found with email=%s", request.getEmail())
+                ));
         String activationToken = generateToken(user, TOKEN_TYPE_RECOVERY_PASSWORD);
 
         // TODO: отправка события в Kafka notifications.reset.password.events
@@ -145,7 +151,10 @@ public class AuthServiceImpl implements AuthService {
 
     private User findUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(
+                        ErrorCode.USER_NOT_FOUND,
+                        String.format("User not found with id=%d", userId)
+                ));
     }
 
     private EmailToken findAndValidateEmailToken(String token) {

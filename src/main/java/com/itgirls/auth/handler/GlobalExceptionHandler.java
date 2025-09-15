@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = ErrorResponse.builder()
                 .status(errorCode.getHttpStatus().value())
                 .error(errorCode.name())
-                .message(errorCode.getMessage())
+                .message(ex.getMessage()) // если есть кастомное сообщение при ошибке, выводит его, иначе дефолтное
                 .timestamp(LocalDateTime.now())
                 .build();
 
