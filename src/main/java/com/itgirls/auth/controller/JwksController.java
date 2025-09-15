@@ -22,6 +22,7 @@ public class JwksController {
     private static final String USE = "sig";
     private static final String ALG = "RS256";
 
+    // Для получения публичной подписи в gateway для проверки токена
     @GetMapping("/.well-known/jwks.json")
     public ResponseEntity<Map<String, Object>> getJwks() {
         RSAPublicKey publicKey = (RSAPublicKey) jwtUtil.getPublicKey();
