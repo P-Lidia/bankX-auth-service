@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build: .
+    ports:
+      #Проброс порта сервиса (host:container)
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/authdb
+      SPRING_DATASOURCE_USERNAME: authuser
+      SPRING_DATASOURCE_PASSWORD: authpassword
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092 # создать переменную окружения в application, либо удалить отсюда
+    depends_on:
+      - postgres
+      - kafka
+
+  #сервис postgres —  отдельный контейнер с PostgreSQL, который запускается вместе с сервисом.
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: authpassword
+    ports:
+      #Проброс порта PostgreSQL для доступа с хоста
+      - "5432:5432"
+    volumes:
+      #Здесь мы подключаем именованный том pgdata к пути /var/lib/postgresql/data внутри контейнера,
+      #чтобы данные базы сохранялись вне контейнера./var/lib/postgresql/data внутри контейнера
+      - pgdata:/var/lib/postgresql/data
+
+  #kafka:
+    #дописать блок про kafka
+
+  #zookeeper:
+  #дописать блок про zookeeper, если он используется
+
+#Именованный том Docker для хранения данных PostgreSQL вне контейнера. Здесь мы объявляем именованный том pgdata
+volumes:
+  pgdata:

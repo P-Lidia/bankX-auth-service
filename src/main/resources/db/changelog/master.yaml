@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/005-triggers.yaml
   - include:
       file: db/changelog/006-email-tokens.yaml
+  - include:
+      file: db/changelog/007-create-refresh-tokens-table.yaml

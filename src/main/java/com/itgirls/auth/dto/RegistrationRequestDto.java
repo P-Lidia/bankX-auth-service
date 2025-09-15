@@ -23,7 +23,7 @@ public class RegistrationRequestDto {
     private String email;
     @Size(min = 10, message = "Password must contain at least 10 characters")
     @Pattern(
-            regexp = "^(?=.*[A-Z])(?=.*\\d).+$",
+            regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+$",
             message = "Password must contain at least one uppercase letter, one digit and one special character"
     )
     private String password;
