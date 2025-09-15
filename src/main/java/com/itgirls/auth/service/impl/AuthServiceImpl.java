@@ -1,8 +1,10 @@
 package com.itgirls.auth.service.impl;
 
 import com.itgirls.auth.dto.RegistrationRequestDto;
+import com.itgirls.auth.dto.UserEventDto;
 import com.itgirls.auth.entity.EmailToken;
 import com.itgirls.auth.entity.User;
+import com.itgirls.auth.kafka.producer.KafkaProducer;
 import com.itgirls.auth.mapper.UserMapper;
 import com.itgirls.auth.repository.EmailTokenRepository;
 import com.itgirls.auth.repository.UserRepository;
@@ -23,6 +25,7 @@ public class AuthServiceImpl implements AuthService {
     private final EmailTokenRepository emailTokenRepository;
     private final PasswordEncoder passwordEncoder;
     final private UserMapper userMapper;
+    private final KafkaProducer kafkaProducer;
 
     @Override
     @Transactional
@@ -47,6 +50,15 @@ public class AuthServiceImpl implements AuthService {
 
         // Генерация токена активации
         String activationToken = UUID.randomUUID().toString();
+
+        /*UserEventDto userEventDto=UserEventDto.builder()
+                .firstName(savedUser.getName())
+                .lastName(savedUser.getSurname())
+                .userEmail(savedUser.getEmail())
+                .activationKey(activationToken)
+                .build();
+        kafkaProducer.sendRegistrationEvent(savedUser.getId().toString(), userEventDto);*/
+
 
         // Сохранение токена в таблицу email_tokens
         EmailToken emailToken = EmailToken.builder()

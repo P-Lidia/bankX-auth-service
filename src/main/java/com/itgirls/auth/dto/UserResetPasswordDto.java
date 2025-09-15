@@ -5,16 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserEventDto {
+public class UserResetPasswordDto {
 
     private String email;
     private String firstName;
     private String lastName;
-    private UUID activationKey;
+    private String resetToken;
+
 }
