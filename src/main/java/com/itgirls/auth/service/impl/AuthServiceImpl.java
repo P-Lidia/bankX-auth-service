@@ -51,14 +51,6 @@ public class AuthServiceImpl implements AuthService {
         // Генерация токена активации
         String activationToken = UUID.randomUUID().toString();
 
-        /*UserEventDto userEventDto=UserEventDto.builder()
-                .firstName(savedUser.getName())
-                .lastName(savedUser.getSurname())
-                .userEmail(savedUser.getEmail())
-                .activationKey(activationToken)
-                .build();
-        kafkaProducer.sendRegistrationEvent(savedUser.getId().toString(), userEventDto);*/
-
 
         // Сохранение токена в таблицу email_tokens
         EmailToken emailToken = EmailToken.builder()
