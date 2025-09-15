@@ -1,14 +1,11 @@
 package com.itgirls.auth.controller;
 
-import com.itgirls.auth.dto.LoginRequestDto;
-import com.itgirls.auth.dto.RegistrationRequestDto;
-import com.itgirls.auth.dto.TokenResponseDto;
 import com.itgirls.auth.dto.ApiResponse;
 import com.itgirls.auth.dto.ForgotPasswordRequestDTO;
 import com.itgirls.auth.dto.LoginRequestDto;
-import com.itgirls.auth.dto.LoginResponseDto;
 import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.dto.ResetPasswordRequestDTO;
+import com.itgirls.auth.dto.TokenResponseDto;
 import com.itgirls.auth.entity.User;
 import com.itgirls.auth.service.AuthService;
 import com.itgirls.auth.service.RefreshTokenService;
@@ -73,12 +70,6 @@ public class AuthController {
                 .build();
     }
 
-    private ResponseEntity<String> buildAccessTokenResponse(@NonNull TokenResponseDto tokensDTO) {
-        ResponseCookie refreshCookie = cookieUtil.createRefreshCookie(tokensDTO.getRefreshToken());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(tokensDTO.getAccessToken());
- 
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse> requestPasswordReset(@Valid @RequestBody ForgotPasswordRequestDTO request) {
         return ResponseEntity.ok(authService.requestPasswordReset(request));
@@ -87,8 +78,15 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse> resetPassword(
             @Valid @RequestBody ResetPasswordRequestDTO request,
-            @RequestParam String token
+            @RequestParam String emailToken
     ) {
-        return ResponseEntity.ok(authService.resetPassword(request, token));
+        return ResponseEntity.ok(authService.resetPassword(request, emailToken));
+    }
+
+    private ResponseEntity<String> buildAccessTokenResponse(@NonNull TokenResponseDto tokensDTO) {
+        ResponseCookie refreshCookie = cookieUtil.createRefreshCookie(tokensDTO.getRefreshToken());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(tokensDTO.getAccessToken());
     }
 }

@@ -12,5 +12,5 @@ import lombok.NoArgsConstructor;
 public class UserJwtDto {
     private Long id;
     private String name;
-    private String role; // getCode в маппинге
+    private String role; // role.getCode в маппинге
 }

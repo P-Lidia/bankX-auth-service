@@ -1,22 +1,20 @@
 package com.itgirls.auth.service.impl;
 
-import com.itgirls.auth.dto.LoginRequestDto;
-import com.itgirls.auth.dto.RegistrationRequestDto;
-import com.itgirls.auth.dto.TokenResponseDto;
 import com.itgirls.auth.dto.ApiResponse;
 import com.itgirls.auth.dto.ForgotPasswordRequestDTO;
 import com.itgirls.auth.dto.LoginRequestDto;
-import com.itgirls.auth.dto.LoginResponseDto;
 import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.dto.ResetPasswordRequestDTO;
+import com.itgirls.auth.dto.TokenResponseDto;
 import com.itgirls.auth.dto.UserEventDto;
 import com.itgirls.auth.entity.EmailToken;
 import com.itgirls.auth.entity.Role;
 import com.itgirls.auth.entity.User;
+import com.itgirls.auth.exception.ApplicationException;
+import com.itgirls.auth.exception.ErrorCode;
 import com.itgirls.auth.kafka.producer.KafkaProducer;
 import com.itgirls.auth.mapper.UserMapper;
 import com.itgirls.auth.repository.EmailTokenRepository;
-import com.itgirls.auth.repository.RefreshTokenRepository;
 import com.itgirls.auth.repository.RoleRepository;
 import com.itgirls.auth.repository.UserRepository;
 import com.itgirls.auth.service.AuthService;
@@ -24,12 +22,9 @@ import com.itgirls.auth.service.RefreshTokenService;
 import com.itgirls.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -58,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
     public User register(RegistrationRequestDto registrationRequestDto) {
         // Проверка уникальности email
         if (userRepository.existsByEmail(registrationRequestDto.getEmail())) {
-            throw new RuntimeException("Email is already taken");
+            throw new ApplicationException(ErrorCode.EMAIL_ALREADY_TAKEN);
         }
 
         // Создание пользователя через Mapper
@@ -67,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
         user.setCreatedAt(LocalDateTime.now());
 
         Role role = roleRepository.findByCode(registrationRequestDto.getRole())
-                .orElseThrow(() -> new IllegalArgumentException("Unknown role: " + registrationRequestDto.getRole()));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.UNKNOWN_ROLE));
         user.setRole(role);
 
         User savedUser = userRepository.save(user);
@@ -84,7 +79,6 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         kafkaProducer.sendRegistrationEvent(savedUser.getId().toString(), userEventDto);
 
-        emailTokenRepository.save(emailToken);
         return savedUser;
     }
 
@@ -108,9 +102,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokenResponseDto login(LoginRequestDto loginRequestDto) {
         User user = userRepository.findByEmail(loginRequestDto.getEmail())
-                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.INVALID_CREDENTIALS));
         if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPasswordHash())) {
-            throw new BadCredentialsException("Invalid email or password");
+            throw new ApplicationException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         String accessToken = jwtUtil.generateAccessToken(userMapper.toUserJwtDto(user));
@@ -124,9 +118,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ApiResponse requestPasswordReset(ForgotPasswordRequestDTO request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> {
-                    return new UserNotFoundByEmailException();
-                });
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
         String activationToken = generateToken(user, TOKEN_TYPE_RECOVERY_PASSWORD);
 
         // TODO: отправка события в Kafka notifications.reset.password.events
@@ -153,22 +145,18 @@ public class AuthServiceImpl implements AuthService {
 
     private User findUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    return new UserNotFoundByIdException(userId);
-                });
+                .orElseThrow(() -> new ApplicationException(ErrorCode.USER_NOT_FOUND));
     }
 
     private EmailToken findAndValidateEmailToken(String token) {
         EmailToken emailToken = emailTokenRepository.findByToken(token)
-                .orElseThrow(() -> {
-                    return new TokenNotFoundException();
-                });
+                .orElseThrow(() -> new ApplicationException(ErrorCode.TOKEN_NOT_FOUND));
 
         // Проверка: если токен уже использован или истек
         if (emailToken.getUsed() || emailToken.getExpiresAt().isBefore(LocalDateTime.now())) {
             log.warn("Token type={} for user id={} already used or expired",
                     emailToken.getType(), emailToken.getUserId());
-            throw new InvalidTokenException(emailToken.getType(), emailToken.getUserId());
+            throw new ApplicationException(ErrorCode.TOKEN_INVALID);
         }
         return emailToken;
     }

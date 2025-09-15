@@ -16,7 +16,6 @@ public class LoginRequestDto {
     @NotBlank(message = "Field cannot be empty")
     @Email(message = "Email must be valid")
     private String email;
-
     @NotBlank(message = "Field cannot be empty")
     @Size(min = 10, message = "Password must be at least 10 characters long")
     @Pattern(
