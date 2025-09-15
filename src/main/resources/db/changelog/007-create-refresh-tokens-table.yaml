@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 004-create-refresh-tokens-table
+      id: 007-create-refresh-tokens-table
       author: dyankovskaya
       comment: Create refresh_tokens table with foreign key to users
       changes:
@@ -30,24 +30,24 @@ databaseChangeLog:
                   constraints:
                     nullable: false
 
-              - addForeignKeyConstraint:
-                  baseTableName: refresh_tokens
-                  baseColumnNames: user_id
-                  constraintName: fk_refresh_tokens_user_id
-                  referencedTableName: users
-                  referencedColumnNames: id
-                  onDelete: CASCADE
+        - addForeignKeyConstraint:
+              baseTableName: refresh_tokens
+              baseColumnNames: user_id
+              constraintName: fk_refresh_tokens_user_id
+              referencedTableName: users
+              referencedColumnNames: id
+              onDelete: CASCADE
 
-              - createIndex:
-                  indexName: idx_refresh_tokens_token_value
-                  tableName: refresh_tokens
-                  columns:
-                    - column:
-                        name: token_value
+        - createIndex:
+            indexName: idx_refresh_tokens_token_value
+            tableName: refresh_tokens
+            columns:
+               - column:
+                  name: token_value
 
-              - createIndex:
-                  indexName: idx_refresh_tokens_user_id
-                  tableName: refresh_tokens
-                  columns:
-                    - column:
-                        name: user_id
+        - createIndex:
+            indexName: idx_refresh_tokens_user_id
+            tableName: refresh_tokens
+            columns:
+               - column:
+                  name: user_id
