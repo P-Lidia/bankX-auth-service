@@ -29,4 +29,6 @@ public class RegistrationRequestDto {
     private String password;
     @Size(min = 10, message = "Password confirmation must contain at least 10 characters")
     private String confirmPassword;
+    @NotBlank
+    private String role;
 }

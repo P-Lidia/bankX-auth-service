@@ -2,6 +2,12 @@ spring:
   application:
     name: auth-service
 
+  jwt:
+    access:
+      lifetime: 900000       # 15 минут
+    refresh:
+      lifetime: 604800000    # 7 дней
+
   datasource:
     #переменные окружения, которые будем задавать в docker-compose.yml
     url: ${SPRING_DATASOURCE_URL}
@@ -22,7 +28,8 @@ server:
     port: 8081
 
 kafka:
-  bootstrap-servers: localhost:9092
+  # bootstrap-servers: localhost:9092
+  bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
   producer:
     key-serializer: org.apache.kafka.common.serialization.StringSerializer
     value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -44,4 +51,3 @@ app:
       backoff-delay: 1000             # initial delay (ms)
       multiplier: 2.0
       max-delay: 10000                #max delay (ms)
-

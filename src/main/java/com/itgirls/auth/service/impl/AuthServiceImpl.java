@@ -1,5 +1,8 @@
 package com.itgirls.auth.service.impl;
 
+import com.itgirls.auth.dto.LoginRequestDto;
+import com.itgirls.auth.dto.RegistrationRequestDto;
+import com.itgirls.auth.dto.TokenResponseDto;
 import com.itgirls.auth.dto.ApiResponse;
 import com.itgirls.auth.dto.ForgotPasswordRequestDTO;
 import com.itgirls.auth.dto.LoginRequestDto;
@@ -7,16 +10,17 @@ import com.itgirls.auth.dto.LoginResponseDto;
 import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.dto.ResetPasswordRequestDTO;
 import com.itgirls.auth.dto.UserEventDto;
-
 import com.itgirls.auth.entity.EmailToken;
-import com.itgirls.auth.entity.RefreshToken;
+import com.itgirls.auth.entity.Role;
 import com.itgirls.auth.entity.User;
 import com.itgirls.auth.kafka.producer.KafkaProducer;
 import com.itgirls.auth.mapper.UserMapper;
 import com.itgirls.auth.repository.EmailTokenRepository;
 import com.itgirls.auth.repository.RefreshTokenRepository;
+import com.itgirls.auth.repository.RoleRepository;
 import com.itgirls.auth.repository.UserRepository;
 import com.itgirls.auth.service.AuthService;
+import com.itgirls.auth.service.RefreshTokenService;
 import com.itgirls.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,17 +39,19 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
-    private final EmailTokenRepository emailTokenRepository;
-    private final PasswordEncoder passwordEncoder;
-    final private UserMapper userMapper;
-    private final JwtUtil jwtUtil;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final KafkaProducer kafkaProducer;
-
     private static final String TOKEN_TYPE_ACTIVATION = "activation";
     private static final String TOKEN_TYPE_RECOVERY_PASSWORD = "recovery_password";
     private static final int TOKEN_EXPIRATION_DAYS = 1;
+
+    private final UserRepository userRepository;
+    private final EmailTokenRepository emailTokenRepository;
+    private final RoleRepository roleRepository;
+
+    private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
+    private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
+    private final KafkaProducer kafkaProducer;
 
     @Override
     @Transactional
@@ -59,6 +65,10 @@ public class AuthServiceImpl implements AuthService {
         User user = userMapper.toEntity(registrationRequestDto, passwordEncoder);
         user.setStatus(User.Status.PENDING);
         user.setCreatedAt(LocalDateTime.now());
+
+        Role role = roleRepository.findByCode(registrationRequestDto.getRole())
+                .orElseThrow(() -> new IllegalArgumentException("Unknown role: " + registrationRequestDto.getRole()));
+        user.setRole(role);
 
         User savedUser = userRepository.save(user);
 
@@ -96,26 +106,19 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public LoginResponseDto login(LoginRequestDto loginRequestDto) {
+    public TokenResponseDto login(LoginRequestDto loginRequestDto) {
         User user = userRepository.findByEmail(loginRequestDto.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
         if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPasswordHash())) {
             throw new BadCredentialsException("Invalid email or password");
         }
-        String accessToken = jwtUtil.generateAccessToken(user);
-        RefreshToken refreshToken = jwtUtil.generateAndSaveRefreshToken(user);
-        return new LoginResponseDto(
-                accessToken,
-                refreshToken.getTokenValue());
-    }
 
-    @Override
-    @Transactional
-    public void logout(String refreshToken) {
-        if (!refreshTokenRepository.existsByTokenValue(refreshToken)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Refresh token not found");
-        }
-        refreshTokenRepository.deleteByTokenValue(refreshToken);
+        String accessToken = jwtUtil.generateAccessToken(userMapper.toUserJwtDto(user));
+        String refreshToken = refreshTokenService.generateAndSaveRefreshToken(user);
+
+        return new TokenResponseDto(
+                accessToken,
+                refreshToken);
     }
 
     @Override
