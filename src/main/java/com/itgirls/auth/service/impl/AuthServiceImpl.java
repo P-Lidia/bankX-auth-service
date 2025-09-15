@@ -1,9 +1,11 @@
 package com.itgirls.auth.service.impl;
 
 import com.itgirls.auth.dto.RegistrationRequestDto;
+import com.itgirls.auth.dto.UserEventDto;
 import com.itgirls.auth.entity.EmailToken;
 import com.itgirls.auth.entity.RefreshToken;
 import com.itgirls.auth.entity.User;
+import com.itgirls.auth.kafka.producer.KafkaProducer;
 import com.itgirls.auth.mapper.UserMapper;
 import com.itgirls.auth.repository.EmailTokenRepository;
 import com.itgirls.auth.repository.RefreshTokenRepository;
@@ -19,6 +21,7 @@ import com.itgirls.auth.dto.LoginResponseDto;
 import org.springframework.security.authentication.BadCredentialsException;
 import com.itgirls.auth.util.JwtUtil;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -32,7 +35,8 @@ public class AuthServiceImpl implements AuthService {
     final private UserMapper userMapper;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
-  
+    private final KafkaProducer kafkaProducer;
+
     private static final String TOKEN_TYPE_ACTIVATION = "activation";
     private static final int TOKEN_EXPIRATION_DAYS = 1;
 
@@ -54,6 +58,15 @@ public class AuthServiceImpl implements AuthService {
         // Генерация токена активации
         String activationToken = UUID.randomUUID().toString();
 
+        //sending registration event to Kafka
+        UserEventDto userEventDto = UserEventDto.builder()
+                .firstName(savedUser.getName())
+                .lastName(savedUser.getSurname())
+                .email(savedUser.getEmail())
+                .activationKey(activationToken)
+                .build();
+        kafkaProducer.sendRegistrationEvent(savedUser.getId().toString(), userEventDto);
+
         // Сохранение токена в таблицу email_tokens
         EmailToken emailToken = EmailToken.builder()
                 .userId(savedUser.getId())
@@ -65,7 +78,6 @@ public class AuthServiceImpl implements AuthService {
 
         emailTokenRepository.save(emailToken);
 
-        // TODO: отправка события USER_REGISTERED в Kafka для Notification Service
 
         return savedUser;
     }
@@ -98,23 +110,24 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponseDto login(LoginRequestDto loginRequestDto) {
-    User user = userRepository.findByEmail(loginRequestDto.getEmail())
-            .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
-    if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPasswordHash())) {
-        throw new BadCredentialsException("Invalid email or password");
-    }
-    String accessToken = jwtUtil.generateAccessToken(user);
-    RefreshToken refreshToken = jwtUtil.generateAndSaveRefreshToken(user);
-    return new LoginResponseDto(
-            accessToken,
-            refreshToken.getTokenValue());
+        User user = userRepository.findByEmail(loginRequestDto.getEmail())
+                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
+        if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPasswordHash())) {
+            throw new BadCredentialsException("Invalid email or password");
+        }
+        String accessToken = jwtUtil.generateAccessToken(user);
+        RefreshToken refreshToken = jwtUtil.generateAndSaveRefreshToken(user);
+        return new LoginResponseDto(
+                accessToken,
+                refreshToken.getTokenValue());
     }
 
     @Override
     @Transactional
     public void logout(String refreshToken) {
         if (!refreshTokenRepository.existsByTokenValue(refreshToken)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Refresh token not found");        }
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Refresh token not found");
+        }
         refreshTokenRepository.deleteByTokenValue(refreshToken);
     }
 }
