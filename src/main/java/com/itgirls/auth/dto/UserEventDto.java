@@ -16,5 +16,5 @@ public class UserEventDto {
     private String email;
     private String firstName;
     private String lastName;
-    private UUID activationKey;
+    private String activationKey;
 }
