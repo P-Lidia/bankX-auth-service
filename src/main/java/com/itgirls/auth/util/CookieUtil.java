@@ -1,12 +1,12 @@
 package com.itgirls.auth.util;
 
+import com.itgirls.auth.exception.ApplicationException;
+import com.itgirls.auth.exception.ErrorCode;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -24,15 +24,13 @@ public class CookieUtil {
 
     public String getRefreshTokenFromRequest(HttpServletRequest request) {
         if (request.getCookies() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Refresh token is missing");
+            throw new ApplicationException(ErrorCode.REFRESH_TOKEN_MISSING);
         }
         return Arrays.stream(request.getCookies())
                 .filter(cookie -> COOKIE_NAME.equals(cookie.getName()))
                 .map(Cookie::getValue)
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Refresh token is missing"
-                ));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.REFRESH_TOKEN_MISSING));
     }
 
     public ResponseCookie createCookie(String name, String value, Duration maxAge) {

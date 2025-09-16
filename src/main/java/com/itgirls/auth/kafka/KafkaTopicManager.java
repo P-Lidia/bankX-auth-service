@@ -9,7 +9,11 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 @Service
@@ -57,6 +61,7 @@ public class KafkaTopicManager {
                     topicName, numPartitions, replicationFactor);
         } catch (InterruptedException | ExecutionException e) {
             log.error("Failed to create topic '{}'", topicName, e);
+            throw new RuntimeException("Failed to create Kafka topic: " + topicName, e);
         }
     }
 

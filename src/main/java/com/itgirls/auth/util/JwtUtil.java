@@ -1,6 +1,5 @@
 package com.itgirls.auth.util;
 
-
 import com.itgirls.auth.dto.UserJwtDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -15,7 +14,6 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -91,7 +89,7 @@ public class JwtUtil {
                     .parseClaimsJws(token);
             return true;
         } catch (JwtException e) {
-           throw new BadCredentialsException("Invalid refresh token");
+            throw new BadCredentialsException("Invalid refresh token");
         }
     }
 
