@@ -191,7 +191,7 @@ public class AuthServiceImpl implements AuthService {
                 .firstName(user.getName())
                 .lastName(user.getSurname())
                 .email(user.getEmail())
-                .activationKey(emailToken)
+                .emailToken(emailToken)
                 .build();
     }
 }
