@@ -1,14 +1,11 @@
 package com.itgirls.auth.service.impl;
 
-import com.itgirls.auth.dto.LoginRequestDto;
-import com.itgirls.auth.dto.RegistrationRequestDto;
-import com.itgirls.auth.dto.TokenResponseDto;
 import com.itgirls.auth.dto.ApiResponse;
 import com.itgirls.auth.dto.ForgotPasswordRequestDTO;
 import com.itgirls.auth.dto.LoginRequestDto;
-import com.itgirls.auth.dto.LoginResponseDto;
 import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.dto.ResetPasswordRequestDTO;
+import com.itgirls.auth.dto.TokenResponseDto;
 import com.itgirls.auth.dto.UserEventDto;
 import com.itgirls.auth.entity.EmailToken;
 import com.itgirls.auth.entity.Role;
@@ -16,7 +13,6 @@ import com.itgirls.auth.entity.User;
 import com.itgirls.auth.kafka.producer.KafkaProducer;
 import com.itgirls.auth.mapper.UserMapper;
 import com.itgirls.auth.repository.EmailTokenRepository;
-import com.itgirls.auth.repository.RefreshTokenRepository;
 import com.itgirls.auth.repository.RoleRepository;
 import com.itgirls.auth.repository.UserRepository;
 import com.itgirls.auth.service.AuthService;
@@ -24,12 +20,10 @@ import com.itgirls.auth.service.RefreshTokenService;
 import com.itgirls.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -76,15 +70,9 @@ public class AuthServiceImpl implements AuthService {
         String activationToken = generateToken(savedUser, TOKEN_TYPE_ACTIVATION);
 
         //sending registration event to Kafka
-        UserEventDto userEventDto = UserEventDto.builder()
-                .firstName(savedUser.getName())
-                .lastName(savedUser.getSurname())
-                .email(savedUser.getEmail())
-                .activationKey(activationToken)
-                .build();
+        UserEventDto userEventDto = createUserEventDto(savedUser, activationToken);
         kafkaProducer.sendRegistrationEvent(savedUser.getId().toString(), userEventDto);
 
-        emailTokenRepository.save(emailToken);
         return savedUser;
     }
 
@@ -127,9 +115,11 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> {
                     return new UserNotFoundByEmailException();
                 });
-        String activationToken = generateToken(user, TOKEN_TYPE_RECOVERY_PASSWORD);
+        String resetToken = generateToken(user, TOKEN_TYPE_RECOVERY_PASSWORD);
 
-        // TODO: отправка события в Kafka notifications.reset.password.events
+        //sending reset password event to Kafka
+        UserEventDto userEventDto = createUserEventDto(user, resetToken);
+        kafkaProducer.sendResetPasswordEvent(user.getId().toString(), userEventDto);
 
         log.info("Password reset token generated for user id={}", user.getId());
         return new ApiResponse("Password reset link sent");
@@ -190,5 +180,14 @@ public class AuthServiceImpl implements AuthService {
         log.info("EmailToken of type={} generated for user id={}, expires at {}",
                 type, user.getId(), emailToken.getExpiresAt());
         return token;
+    }
+
+    private UserEventDto createUserEventDto(User user, String emailToken) {
+        return UserEventDto.builder()
+                .firstName(user.getName())
+                .lastName(user.getSurname())
+                .email(user.getEmail())
+                .activationKey(emailToken)
+                .build();
     }
 }
