@@ -7,6 +7,7 @@ import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.dto.ResetPasswordRequestDTO;
 import com.itgirls.auth.dto.TokenResponseDto;
 import com.itgirls.auth.dto.UserEventDto;
+import com.itgirls.auth.dto.UserResponseDto;
 import com.itgirls.auth.entity.EmailToken;
 import com.itgirls.auth.entity.Role;
 import com.itgirls.auth.entity.User;
@@ -50,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public User register(RegistrationRequestDto registrationRequestDto) {
+    public ApiResponse<String> register(RegistrationRequestDto registrationRequestDto) {
         // Проверка уникальности email
         if (userRepository.existsByEmail(registrationRequestDto.getEmail())) {
             throw new ApplicationException(ErrorCode.EMAIL_ALREADY_TAKEN);
@@ -71,20 +72,15 @@ public class AuthServiceImpl implements AuthService {
         String activationToken = generateToken(savedUser, TOKEN_TYPE_ACTIVATION);
 
         //sending registration event to Kafka
-        UserEventDto userEventDto = UserEventDto.builder()
-                .firstName(savedUser.getName())
-                .lastName(savedUser.getSurname())
-                .email(savedUser.getEmail())
-                .activationKey(activationToken)
-                .build();
+        UserEventDto userEventDto = createUserEventDto(savedUser, activationToken);
         kafkaProducer.sendRegistrationEvent(savedUser.getId().toString(), userEventDto);
 
-        return savedUser;
+        return new ApiResponse<>("Registration successful, check your email");
     }
 
     @Override
     @Transactional
-    public User activateAccount(String token) {
+    public ApiResponse<UserResponseDto> activateAccount(String token) {
         // Поиск токена и проверка: если токен уже использован или истек
         EmailToken emailToken = findAndValidateEmailToken(token);
 
@@ -96,7 +92,10 @@ public class AuthServiceImpl implements AuthService {
         emailToken.setUsed(true);
         emailTokenRepository.save(emailToken);
 
-        return activatedUser;
+        return new ApiResponse<>(
+                "Account successfully activated",
+                userMapper.toUserResponseDto(activatedUser)
+        );
     }
 
     @Override
@@ -119,23 +118,25 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ApiResponse requestPasswordReset(ForgotPasswordRequestDTO request) {
+    public ApiResponse<String> requestPasswordReset(ForgotPasswordRequestDTO request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ApplicationException(
                         ErrorCode.USER_NOT_FOUND,
                         String.format("User not found with email=%s", request.getEmail())
                 ));
-        String activationToken = generateToken(user, TOKEN_TYPE_RECOVERY_PASSWORD);
+        String resetToken = generateToken(user, TOKEN_TYPE_RECOVERY_PASSWORD);
 
-        // TODO: отправка события в Kafka notifications.reset.password.events
+        //sending reset password event to Kafka
+        UserEventDto userEventDto = createUserEventDto(user, resetToken);
+        kafkaProducer.sendResetPasswordEvent(user.getId().toString(), userEventDto);
 
         log.info("Password reset token generated for user id={}", user.getId());
-        return new ApiResponse("Password reset link sent");
+        return new ApiResponse<>("Password reset link sent, check your email");
     }
 
     @Override
     @Transactional
-    public ApiResponse resetPassword(ResetPasswordRequestDTO request, String token) {
+    public ApiResponse<String> resetPassword(ResetPasswordRequestDTO request, String token) {
         EmailToken emailToken = findAndValidateEmailToken(token);
 
         User user = findUserById(emailToken.getUserId());
@@ -146,7 +147,7 @@ public class AuthServiceImpl implements AuthService {
         emailTokenRepository.save(emailToken);
 
         log.info("New password for user id={} saved", user.getId());
-        return new ApiResponse("Password successfully saved");
+        return new ApiResponse<>("Password successfully saved");
     }
 
     private User findUserById(Long userId) {
@@ -187,5 +188,14 @@ public class AuthServiceImpl implements AuthService {
         log.info("EmailToken of type={} generated for user id={}, expires at {}",
                 type, user.getId(), emailToken.getExpiresAt());
         return token;
+    }
+
+    private UserEventDto createUserEventDto(User user, String emailToken) {
+        return UserEventDto.builder()
+                .firstName(user.getName())
+                .lastName(user.getSurname())
+                .email(user.getEmail())
+                .emailToken(emailToken)
+                .build();
     }
 }

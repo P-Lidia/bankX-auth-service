@@ -34,10 +34,10 @@ public class JwtUtil {
     private final PublicKey publicKey;
 
     @Value("${jwt.access.lifetime}")
-    private Long jwtAccessTokenExpiration;
+    private long jwtAccessTokenExpiration;
     @Getter
     @Value("${jwt.refresh.lifetime}")
-    private Long jwtRefreshTokenExpiration;
+    private long jwtRefreshTokenExpiration;
 
     public JwtUtil() throws Exception {
         KeyPair keyPair = generatedKeyPair();
