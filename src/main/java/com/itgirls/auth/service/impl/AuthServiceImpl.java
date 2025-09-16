@@ -11,6 +11,8 @@ import com.itgirls.auth.dto.UserResponseDto;
 import com.itgirls.auth.entity.EmailToken;
 import com.itgirls.auth.entity.Role;
 import com.itgirls.auth.entity.User;
+import com.itgirls.auth.exception.ApplicationException;
+import com.itgirls.auth.exception.ErrorCode;
 import com.itgirls.auth.kafka.producer.KafkaProducer;
 import com.itgirls.auth.mapper.UserMapper;
 import com.itgirls.auth.repository.EmailTokenRepository;
@@ -21,7 +23,6 @@ import com.itgirls.auth.service.RefreshTokenService;
 import com.itgirls.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,7 +54,7 @@ public class AuthServiceImpl implements AuthService {
     public ApiResponse<String> register(RegistrationRequestDto registrationRequestDto) {
         // Проверка уникальности email
         if (userRepository.existsByEmail(registrationRequestDto.getEmail())) {
-            throw new RuntimeException("Email is already taken");
+            throw new ApplicationException(ErrorCode.EMAIL_ALREADY_TAKEN);
         }
 
         // Создание пользователя через Mapper
@@ -62,7 +63,7 @@ public class AuthServiceImpl implements AuthService {
         user.setCreatedAt(LocalDateTime.now());
 
         Role role = roleRepository.findByCode(registrationRequestDto.getRole())
-                .orElseThrow(() -> new IllegalArgumentException("Unknown role: " + registrationRequestDto.getRole()));
+                .orElseThrow(() -> new ApplicationException(ErrorCode.UNKNOWN_ROLE));
         user.setRole(role);
 
         User savedUser = userRepository.save(user);
@@ -100,9 +101,12 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokenResponseDto login(LoginRequestDto loginRequestDto) {
         User user = userRepository.findByEmail(loginRequestDto.getEmail())
-                .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
+                .orElseThrow(() -> new ApplicationException(
+                        ErrorCode.INVALID_CREDENTIALS,
+                        "Invalid login attempt with email: " + loginRequestDto.getEmail()
+                ));
         if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPasswordHash())) {
-            throw new BadCredentialsException("Invalid email or password");
+            throw new ApplicationException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         String accessToken = jwtUtil.generateAccessToken(userMapper.toUserJwtDto(user));
@@ -116,9 +120,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ApiResponse<String> requestPasswordReset(ForgotPasswordRequestDTO request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> {
-                    return new UserNotFoundByEmailException();
-                });
+                .orElseThrow(() -> new ApplicationException(
+                        ErrorCode.USER_NOT_FOUND,
+                        String.format("User not found with email=%s", request.getEmail())
+                ));
         String resetToken = generateToken(user, TOKEN_TYPE_RECOVERY_PASSWORD);
 
         //sending reset password event to Kafka
@@ -147,22 +152,21 @@ public class AuthServiceImpl implements AuthService {
 
     private User findUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    return new UserNotFoundByIdException(userId);
-                });
+                .orElseThrow(() -> new ApplicationException(
+                        ErrorCode.USER_NOT_FOUND,
+                        String.format("User not found with id=%d", userId)
+                ));
     }
 
     private EmailToken findAndValidateEmailToken(String token) {
         EmailToken emailToken = emailTokenRepository.findByToken(token)
-                .orElseThrow(() -> {
-                    return new TokenNotFoundException();
-                });
+                .orElseThrow(() -> new ApplicationException(ErrorCode.TOKEN_NOT_FOUND));
 
         // Проверка: если токен уже использован или истек
         if (emailToken.getUsed() || emailToken.getExpiresAt().isBefore(LocalDateTime.now())) {
             log.warn("Token type={} for user id={} already used or expired",
                     emailToken.getType(), emailToken.getUserId());
-            throw new InvalidTokenException(emailToken.getType(), emailToken.getUserId());
+            throw new ApplicationException(ErrorCode.TOKEN_INVALID);
         }
         return emailToken;
     }

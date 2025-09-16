@@ -67,14 +67,7 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
                 .build();
     }
-
-    private ResponseEntity<String> buildAccessTokenResponse(@NonNull TokenResponseDto tokensDTO) {
-        ResponseCookie refreshCookie = cookieUtil.createRefreshCookie(tokensDTO.getRefreshToken());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(tokensDTO.getAccessToken());
-    }
-
+ 
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<String>> requestPasswordReset(@Valid @RequestBody ForgotPasswordRequestDTO request) {
         return ResponseEntity.ok(authService.requestPasswordReset(request));
@@ -86,5 +79,12 @@ public class AuthController {
             @RequestParam String emailToken
     ) {
         return ResponseEntity.ok(authService.resetPassword(request, emailToken));
+    }
+
+    private ResponseEntity<String> buildAccessTokenResponse(@NonNull TokenResponseDto tokensDTO) {
+        ResponseCookie refreshCookie = cookieUtil.createRefreshCookie(tokensDTO.getRefreshToken());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(tokensDTO.getAccessToken());
     }
 }

@@ -35,8 +35,6 @@ public interface UserMapper {
     @Mapping(target = "createdAt", ignore = true)
     User toEntity(LoginRequestDto loginRequestDto);
 
-    @Mapping(source = "role.code", target = "role")
-        // берем поле code из Role
+    @Mapping(source = "role.code", target = "role")  // берем поле code из Role
     UserJwtDto toUserJwtDto(User user);
-
 }

@@ -7,7 +7,6 @@ import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.dto.ResetPasswordRequestDTO;
 import com.itgirls.auth.dto.TokenResponseDto;
 import com.itgirls.auth.dto.UserResponseDto;
-import com.itgirls.auth.entity.User;
 
 public interface AuthService {
     ApiResponse<String> register(RegistrationRequestDto registrationRequestDto);
