@@ -1,19 +1,68 @@
+# Временно отключено партиционирование и всё, что с этим связано
 databaseChangeLog:
 - changeSet:
     id: create-users
     author: P-Lidia
     changes:
-      - sql: |
-          CREATE TABLE users (
-            id BIGSERIAL PRIMARY KEY,
-            user_name VARCHAR(255) NOT NULL,
-            user_surname VARCHAR(255) NOT NULL,
-            email VARCHAR(255) NOT NULL UNIQUE,
-            password_hash VARCHAR(255) NOT NULL,
-            status VARCHAR(20) NOT NULL,
-            created_at TIMESTAMP DEFAULT now(),
-            updated_at TIMESTAMP DEFAULT now()
-          ) PARTITION BY RANGE (created_at);
+      - createTable:
+          tableName: users
+          columns:
+            - column:
+                name: id
+                type: BIGSERIAL
+                constraints:
+                  primaryKey: true
+            - column:
+                name: user_name
+                type: VARCHAR(255)
+                constraints:
+                  nullable: false
+            - column:
+                name: user_surname
+                type: VARCHAR(255)
+                constraints:
+                  nullable: false
+            - column:
+                name: email
+                type: VARCHAR(255)
+                constraints:
+                  nullable: false
+                  unique: true
+            - column:
+                name: password_hash
+                type: VARCHAR(255)
+                constraints:
+                  nullable: false
+            - column:
+                name: status
+                type: VARCHAR(20)
+                constraints:
+                  nullable: false
+            - column:
+                name: created_at
+                type: TIMESTAMP
+                defaultValueComputed: "NOW()"
+            - column:
+                name: updated_at
+                type: TIMESTAMP
+                defaultValueComputed: "NOW()"
+
+#databaseChangeLog:
+#- changeSet:
+#    id: create-users
+#    author: P-Lidia
+#    changes:
+#      - sql: |
+#          CREATE TABLE users (
+#            id BIGSERIAL PRIMARY KEY,
+#            user_name VARCHAR(255) NOT NULL,
+#            user_surname VARCHAR(255) NOT NULL,
+#            email VARCHAR(255) NOT NULL UNIQUE,
+#            password_hash VARCHAR(255) NOT NULL,
+#            status VARCHAR(20) NOT NULL,
+#            created_at TIMESTAMP DEFAULT now(),
+#            updated_at TIMESTAMP DEFAULT now()
+#          ) PARTITION BY RANGE (created_at);
 
 - changeSet:
     id: create-roles

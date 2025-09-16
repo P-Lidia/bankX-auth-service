@@ -3,13 +3,15 @@ databaseChangeLog:
       file: db/changelog/001-init-users.yaml
   - include:
       file: db/changelog/002-insert-roles.yaml
-  - include:
-      file: db/changelog/003-users-partitions.yaml
+#  - include:
+#      file: db/changelog/003-users-partitions.yaml
   - include:
       file: db/changelog/004-indexes-users.yaml
-  - include:
-      file: db/changelog/005-triggers.yaml
+#  - include:
+#      file: db/changelog/005-triggers.yaml
   - include:
       file: db/changelog/006-email-tokens.yaml
   - include:
       file: db/changelog/007-create-refresh-tokens-table.yaml
+
+      # Временно отключено партиционирование и всё, что с этим связано
