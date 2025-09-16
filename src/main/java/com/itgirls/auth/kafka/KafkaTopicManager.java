@@ -25,7 +25,7 @@ public class KafkaTopicManager {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    @Value("${app.kafka.topics.user-events}")
+    @Value("${app.kafka.topics.user-registration-events}")
     private String userEventsTopic;
 
     @Value("${app.kafka.topics.dead-letter-queue}")

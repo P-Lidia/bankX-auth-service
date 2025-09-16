@@ -10,7 +10,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/authdb
       SPRING_DATASOURCE_USERNAME: authuser
       SPRING_DATASOURCE_PASSWORD: authpassword
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092 # создать переменную окружения в application, либо удалить отсюда
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092 # (done) создать переменную окружения в application, либо удалить отсюда
     depends_on:
       - postgres
       - kafka
@@ -30,8 +30,56 @@ services:
       #чтобы данные базы сохранялись вне контейнера./var/lib/postgresql/data внутри контейнера
       - pgdata:/var/lib/postgresql/data
 
-  #kafka:
-    #дописать блок про kafka
+  kafka:
+    image: apache/kafka:3.8.0 # Официальный образ Apache Kafka 3.8.0 с поддержкой KRaft (без Zookeeper)
+    container_name: kafka
+    ports:
+      - 9092:9092 # Порт для клиентских подключений (Kafka listeners для приложений: продюсеры, консьюмеры)
+    environment:
+      #CLUSTER_ID:
+      # Генерируется через `kafka-storage.sh random-uuid`
+      # Уникальный ID текущего узла Kafka (в рамках кластера)
+      KAFKA_NODE_ID: 1
+      # Задает роли, которые исполняет текущий узел
+      # broker — принимает/отдает сообщения
+      # controller — управляет метаданными (лидерство partition'ов, топики, ACL и др.)
+      # Значение `broker,controller` означает "single-node" кластер (совмещены роли)
+      KAFKA_PROCESS_ROLES: broker,controller
+      # Какие протоколы и на каких интерфейсах слушает Kafka внутри контейнера
+      # PLAINTEXT — внешний интерфейс для клиентов ( Без шифрования и авторизации), CONTROLLER — интерфейс для внутренней связи контроллеров
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      # Kafka listeners определяют, на каких интерфейсах и портах брокер принимает подключения, и какие протоколы безопасности использовать.
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://host.docker.internal:9092
+      # Указывает, какие протоколы безопасности применяются к каждому типу listener'а
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      # Указывает, какой listener используется контроллером
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      # Конфигурация кворума контроллеров в KRaft- это набор брокеров, которые исполняют роль контроллера и управляют метаданными всего кластера.
+      #  Это замена Zookeeper в Kafka 2.x и старше.
+      # Формат: <nodeId>@<host>:<controllerPort>
+      # localhost в этом контексте допустим, потому что брокер = контроллер в single-node режиме
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:9093'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 #  replication.factor — сколько копий (реплик) каждой партиции хранить.
+      # Задержка перед началом ребалансировки consumer group'ов (в миллисекундах)
+      # Ребалансировка (rebalance) в контексте Kafka — это процесс перераспределения partition'ов топика между консьюмерами внутри одной consumer group.
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 5000
+      #In-Sync Replicas (ISR) — это подмножество реплик партиции Kafka
+      # В single-node окружении обязательно = 1 (Нет отказоустойчивости)
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1  # Минимальное число in-sync реплик для логов транзакций
+      # Значение 1 допустимо только в одноброкерной конфигурации
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 # Репликация логов транзакций
+      #Установлено время хранения сообщений (7 дней)
+      KAFKA_LOG_RETENTION_HOURS: 168
+      #Установлен уровень INFO для логов Kafka, чтобы упростить мониторинг и отладку без избыточного вывода.
+      KAFKA_LOG4J_LOGGERS: kafka=INFO,org.apache.kafka=INFO
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - bankx-network
+
+
 
   #zookeeper:
   #дописать блок про zookeeper, если он используется
@@ -39,3 +87,4 @@ services:
 #Именованный том Docker для хранения данных PostgreSQL вне контейнера. Здесь мы объявляем именованный том pgdata
 volumes:
   pgdata:
+  kafka_data:

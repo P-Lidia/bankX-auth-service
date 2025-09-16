@@ -13,11 +13,11 @@ import org.springframework.stereotype.Component;
 public class KafkaProducer {
 
     private KafkaTemplate<String, Object> kafkaTemplate;
-    @Value("${app.kafka.topics.user-events}")
+    @Value("${app.kafka.topics.user-registration-events}")
     private String userRegistrationTopic;
     @Value("${app.kafka.topics.dead-letter-queue}")
     private String dlqTopic;
-    @Value ("notifications.reset.password.events")
+    @Value ("${app.kafka.topics.user-reset-events}")
     private String resetPasswordTopic;
 
 
@@ -27,6 +27,7 @@ public class KafkaProducer {
             kafkaTemplate.send(userRegistrationTopic, key, userEventDto);
             log.info("Standard producer sent to {}: key={}, value={}", userRegistrationTopic, key, userEventDto);
         } catch (Exception e) {
+            kafkaTemplate.send(dlqTopic, key, userEventDto);
             log.error("Error sending to {}, sending to DLQ: {}", userRegistrationTopic, e.getMessage());
         }
     }
@@ -37,6 +38,7 @@ public class KafkaProducer {
             kafkaTemplate.send(resetPasswordTopic, key, userEventDto);
             log.info("Standard producer sent to {}: key={}, value={}",resetPasswordTopic , key, userEventDto);
         } catch (Exception e) {
+            kafkaTemplate.send(dlqTopic, key, userEventDto);
             log.error("Error sending to {}, sending to DLQ: {}", resetPasswordTopic, e.getMessage());
         }
     }
