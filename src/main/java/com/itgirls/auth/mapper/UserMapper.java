@@ -19,12 +19,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "passwordHash", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "role", ignore = true)
-    @Mapping(target = "password", expression = "java(passwordEncoder.encode(userCreateDto.getPassword()))")
+    @Mapping(target = "passwordHash", expression = "java(passwordEncoder.encode(registrationRequestDto.getPassword()))")
     User toEntity(RegistrationRequestDto registrationRequestDto, @Context PasswordEncoder passwordEncoder);
 
     UserResponseDto toUserResponseDto(User user);
