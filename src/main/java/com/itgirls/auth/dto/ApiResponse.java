@@ -7,6 +7,13 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ApiResponse {
+public class ApiResponse<T> {
     private String message;
+    private T data; // для ДТО
+
+    // когда нужно вернуть только сообщение без ДТО
+    public ApiResponse(String message) {
+        this.message = message;
+        this.data = null;
+    }
 }

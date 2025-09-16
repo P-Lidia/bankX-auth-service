@@ -1,15 +1,12 @@
 package com.itgirls.auth.controller;
 
-import com.itgirls.auth.dto.LoginRequestDto;
-import com.itgirls.auth.dto.RegistrationRequestDto;
-import com.itgirls.auth.dto.TokenResponseDto;
 import com.itgirls.auth.dto.ApiResponse;
 import com.itgirls.auth.dto.ForgotPasswordRequestDTO;
 import com.itgirls.auth.dto.LoginRequestDto;
-import com.itgirls.auth.dto.LoginResponseDto;
 import com.itgirls.auth.dto.RegistrationRequestDto;
 import com.itgirls.auth.dto.ResetPasswordRequestDTO;
-import com.itgirls.auth.entity.User;
+import com.itgirls.auth.dto.TokenResponseDto;
+import com.itgirls.auth.dto.UserResponseDto;
 import com.itgirls.auth.service.AuthService;
 import com.itgirls.auth.service.RefreshTokenService;
 import com.itgirls.auth.util.CookieUtil;
@@ -39,15 +36,13 @@ public class AuthController {
     private final CookieUtil cookieUtil;
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody RegistrationRequestDto registrationRequestDto) {
-        User user = authService.register(registrationRequestDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+    public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegistrationRequestDto registrationRequestDto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(registrationRequestDto));
     }
 
     @GetMapping("/activate")
-    public ResponseEntity<User> activate(@RequestParam String token) {
-        User user = authService.activateAccount(token);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<ApiResponse<UserResponseDto>> activate(@RequestParam String emailToken) {
+        return ResponseEntity.ok(authService.activateAccount(emailToken));
     }
 
     @PostMapping("/login")
@@ -78,17 +73,18 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(tokensDTO.getAccessToken());
- 
+    }
+
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse> requestPasswordReset(@Valid @RequestBody ForgotPasswordRequestDTO request) {
+    public ResponseEntity<ApiResponse<String>> requestPasswordReset(@Valid @RequestBody ForgotPasswordRequestDTO request) {
         return ResponseEntity.ok(authService.requestPasswordReset(request));
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse> resetPassword(
+    public ResponseEntity<ApiResponse<String>> resetPassword(
             @Valid @RequestBody ResetPasswordRequestDTO request,
-            @RequestParam String token
+            @RequestParam String emailToken
     ) {
-        return ResponseEntity.ok(authService.resetPassword(request, token));
+        return ResponseEntity.ok(authService.resetPassword(request, emailToken));
     }
 }
