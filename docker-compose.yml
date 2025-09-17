@@ -58,7 +58,7 @@ services:
       #  Это замена Zookeeper в Kafka 2.x и старше.
       # Формат: <nodeId>@<host>:<controllerPort>
       # localhost в этом контексте допустим, потому что брокер = контроллер в single-node режиме
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:9093'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 #  replication.factor — сколько копий (реплик) каждой партиции хранить.
       # Задержка перед началом ребалансировки consumer group'ов (в миллисекундах)
       # Ребалансировка (rebalance) в контексте Kafka — это процесс перераспределения partition'ов топика между консьюмерами внутри одной consumer group.
@@ -78,6 +78,11 @@ services:
       - kafka_data:/var/lib/kafka/data
     networks:
       - bankx-network
+    healthcheck:
+      test: [ "CMD", "kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
 
 

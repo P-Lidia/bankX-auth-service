@@ -12,12 +12,12 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class KafkaProducer {
 
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     @Value("${app.kafka.topics.user-registration-events}")
     private String userRegistrationTopic;
     @Value("${app.kafka.topics.dead-letter-queue}")
     private String dlqTopic;
-    @Value ("${app.kafka.topics.user-reset-events}")
+    @Value("${app.kafka.topics.user-reset-events}")
     private String resetPasswordTopic;
 
 
@@ -27,7 +27,7 @@ public class KafkaProducer {
             kafkaTemplate.send(userRegistrationTopic, key, userEventDto);
             log.info("Standard producer sent to {}: key={}, value={}", userRegistrationTopic, key, userEventDto);
         } catch (Exception e) {
-            kafkaTemplate.send(dlqTopic, key, userEventDto);
+            sendToDlq(key, userEventDto, e.getMessage());
             log.error("Error sending to {}, sending to DLQ: {}", userRegistrationTopic, e.getMessage());
         }
     }
@@ -36,9 +36,9 @@ public class KafkaProducer {
     public void sendResetPasswordEvent(String key, UserEventDto userEventDto) {
         try {
             kafkaTemplate.send(resetPasswordTopic, key, userEventDto);
-            log.info("Standard producer sent to {}: key={}, value={}",resetPasswordTopic , key, userEventDto);
+            log.info("Standard producer sent to {}: key={}, value={}", resetPasswordTopic, key, userEventDto);
         } catch (Exception e) {
-            kafkaTemplate.send(dlqTopic, key, userEventDto);
+            sendToDlq(key, userEventDto, e.getMessage());
             log.error("Error sending to {}, sending to DLQ: {}", resetPasswordTopic, e.getMessage());
         }
     }
@@ -48,7 +48,7 @@ public class KafkaProducer {
         try {
             String dlqMessage = String.format("Original message: %s, Error: %s", userEventDto.toString(), error);
             kafkaTemplate.send(dlqTopic, key, dlqMessage);
-            log.info("Sent to DLQ {}: key={}, value={}", dlqTopic, key, userEventDto);
+            log.info("Sent to DLQ {}: key={}, value={}", dlqTopic, key, dlqMessage);
         } catch (Exception e) {
             log.error("Failed to send to DLQ {}: {}", dlqTopic, e.getMessage());
         }
