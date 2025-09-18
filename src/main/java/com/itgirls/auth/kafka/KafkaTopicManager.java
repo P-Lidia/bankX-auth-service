@@ -25,11 +25,14 @@ public class KafkaTopicManager {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    @Value("${app.kafka.topics.user-events}")
+    @Value("${app.kafka.topics.user-registration-events}")
     private String userEventsTopic;
 
     @Value("${app.kafka.topics.dead-letter-queue}")
     private String dlqTopic;
+
+    @Value("${app.kafka.topics.user-reset-events}")
+    private String resetPasswordTopic;
 
     //Инициализирует AdminClient и создаёт необходимые топики при старте приложения
     @PostConstruct
@@ -43,9 +46,9 @@ public class KafkaTopicManager {
     //Создаёт предопределённые топики из конфигурации.
     //По умолчанию создаёт топики с 3 партициями и фактором репликации 3.
     private void createDefaultTopics() {
-        List<String> topics = new ArrayList<>(Arrays.asList(userEventsTopic, dlqTopic));
+        List<String> topics = new ArrayList<>(Arrays.asList(userEventsTopic, dlqTopic, resetPasswordTopic));
         for (String topic : topics) {
-            createTopicIfNotExists(topic, 3, (short) 3);
+            createTopicIfNotExists(topic, 3, (short) 1);
         }
     }
 
@@ -54,6 +57,7 @@ public class KafkaTopicManager {
         try {
             if (topicExists(topicName)) {
                 log.warn("Topic '{}' already exists,", topicName);
+                return;
             }
             NewTopic newTopic = new NewTopic(topicName, numPartitions, replicationFactor);
             adminClient.createTopics(Collections.singleton(newTopic)).all().get();
@@ -61,7 +65,7 @@ public class KafkaTopicManager {
                     topicName, numPartitions, replicationFactor);
         } catch (InterruptedException | ExecutionException e) {
             log.error("Failed to create topic '{}'", topicName, e);
-            throw new RuntimeException("Failed to create Kafka topic: " + topicName, e);
+            Thread.currentThread().interrupt();
         }
     }
 
