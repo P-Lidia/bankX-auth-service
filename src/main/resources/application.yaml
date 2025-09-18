@@ -4,13 +4,9 @@ spring:
 
   datasource:
     # переменные окружения, которые будем задавать в docker-compose.yml
-    # переменные окружения, которые будем задавать в docker-compose.yml
-    #    url: ${SPRING_DATASOURCE_URL}
-    #    username: ${SPRING_DATASOURCE_USERNAME}
-    #    password: ${SPRING_DATASOURCE_PASSWORD}
-    url: jdbc:postgresql://localhost:5432/BankX_auth
-    username: postgres
-    password: password
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
 
   jpa:
     hibernate:
@@ -25,7 +21,6 @@ spring:
 
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
-    #  bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
