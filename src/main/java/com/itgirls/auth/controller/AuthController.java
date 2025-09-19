@@ -41,8 +41,8 @@ public class AuthController {
     }
 
     @GetMapping("/activate")
-    public ResponseEntity<ApiResponse<UserResponseDto>> activate(@RequestParam String emailToken) {
-        return ResponseEntity.ok(authService.activateAccount(emailToken));
+    public ResponseEntity<ApiResponse<UserResponseDto>> activate(@RequestParam String token) {
+        return ResponseEntity.ok(authService.activateAccount(token));
     }
 
     @PostMapping("/login")
@@ -76,9 +76,9 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<String>> resetPassword(
             @Valid @RequestBody ResetPasswordRequestDTO request,
-            @RequestParam String emailToken
+            @RequestParam String token
     ) {
-        return ResponseEntity.ok(authService.resetPassword(request, emailToken));
+        return ResponseEntity.ok(authService.resetPassword(request, token));
     }
 
     private ResponseEntity<String> buildAccessTokenResponse(@NonNull TokenResponseDto tokensDTO) {

@@ -15,7 +15,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: token_value
-                  type: VARCHAR(512)
+                  type: VARCHAR(1024)
                   constraints:
                     nullable: false
                     unique: true
