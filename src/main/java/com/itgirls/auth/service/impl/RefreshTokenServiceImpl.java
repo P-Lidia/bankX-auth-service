@@ -50,7 +50,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 .user(user)
                 .expiryDate(Instant.now().plusMillis(jwtUtil.getJwtRefreshTokenExpiration()))
                 .build();
-        saveRefreshToken(refreshToken);
+        refreshTokenRepository.deleteByUser(refreshToken.getUser());
+        refreshTokenRepository.save(refreshToken);
         return valueToken;
     }
 
@@ -63,10 +64,5 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
             return;
         }
         refreshTokenRepository.deleteByTokenValue(refreshToken);
-    }
-
-    private void saveRefreshToken(RefreshToken refreshToken) {
-        refreshTokenRepository.deleteByUser(refreshToken.getUser());
-        refreshTokenRepository.save(refreshToken);
     }
 }
