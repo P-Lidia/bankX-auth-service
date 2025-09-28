@@ -31,6 +31,10 @@ spring:
         enable-idempotence: true # protection against duplicates
 
 jwt:
+  private-key: |
+    MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBK...
+  public-key: |
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A...
   access:
     lifetime: 900000       # 15 минут
   refresh:
