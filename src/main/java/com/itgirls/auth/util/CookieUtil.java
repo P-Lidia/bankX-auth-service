@@ -17,7 +17,7 @@ public class CookieUtil {
 
     private static final String COOKIE_NAME = "refreshToken";
     public static final String SAME_SITE_STRICT = "Strict";
-    private static final String COOKIE_PATH = "/auth/refresh";
+    private static final String COOKIE_PATH = "/";
     private static final Duration LOGOUT_MAX_AGE = Duration.ZERO;
 
     private final JwtUtil jwtUtil;
