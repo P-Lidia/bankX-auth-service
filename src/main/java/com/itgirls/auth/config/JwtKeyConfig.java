@@ -23,12 +23,14 @@ public class JwtKeyConfig {
 
     @Bean
     public PrivateKey privateKey() throws Exception {
+        privateKey = privateKey.replaceAll("\\s+", "");
         byte[] keyBytes = Base64.getDecoder().decode(privateKey);
         return KeyFactory.getInstance(RSA_ALGORITHM).generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
     }
 
     @Bean
     public PublicKey publicKey() throws Exception {
+        publicKey = publicKey.replaceAll("\\s+", "");
         byte[] keyBytes = Base64.getDecoder().decode(publicKey);
         return KeyFactory.getInstance(RSA_ALGORITHM).generatePublic(new X509EncodedKeySpec(keyBytes));
     }

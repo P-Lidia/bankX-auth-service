@@ -11,7 +11,7 @@ spring:
   jpa:
     hibernate:
       # Hibernate будет автоматически обновлять схему базы данных (можно изменить по необходимости)
-      ddl-auto: update
+      ddl-auto: validate
     # для вывода SQL-запросов в лог (удобно для отладки)
     show-sql: true
 
@@ -32,39 +32,40 @@ spring:
 
 jwt:
   private-key: |
-    MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDh6T0xp9Yzjgm3
-    TR2RzPo+0Mwgnf+HC81Nid3JVhPW58AUr4OAlF9Q7NXLAUhoSrAN86enhrh+h09D
-    YbVMKDHe2aOd/TXmlG6yQFhXKaq4UUgGN4nI0d9lHWEXTCfC7fOKgk77N79uAbk9
-    S4RnUqlKtNGMHzmoNFyYY3pzwsxqh9r5dPt9hpbL5yQZA7MrvkwH0znB1MHQCQ+u
-    pV57GTlQCydwXDF8t8Vrugbjqpy4louLvboZA3KaKgpd/ty3r9MpVtmLoloQcKD9
-    gWzp1UUig+AC2QieVg6HthmuMv7Q8ZxgAJQxEbF6/wyWdGWHIDDZr+18PuXEA7nV
-    KaPFQgljAgMBAAECggEAAfZDGZ/Mse+YBldX8ZC3VFKpkIJJb6mlaPjQtsjAbQY1
-    OljDNRt/b8CmzgJfAnIyRjoT/itNheJ0nfAGzDhbJTAnBh5mre/NvaQ7wCy0oVt/
-    WyJ3WAmj6DO8SKCuMGNdppnMHXgV+bAaej2iKD2PtSjjMFWDFtgMPSc8BIOwFSAV
-    vdqkuAQJh3qV0wYqj5N2UqZzRkzhwYhQ2+4sFvNykyVAIobsi02DLWjX3ZMNE7st
-    OKqaV2Go38wwyM991+k+hW/kp31OLbfYzLUn7dy2EjbIPTMkQIJGY3fUv+BX0UQ2
-    77mQBNFrUOBpv1nvHWT6mXJKmAvGH3lEBomw/Y3IRQKBgQD7cn9jxQ3q6LAadUfR
-    reDaoeG3hT4vxVDwSK0BQYVXKWBLdS58SoxTfj9+IK3NfntCGVISbe0ZJJUg/URg
-    SGx/9Kc7W4wocp584YSxKJEgwhQxchblCMXemTh61Rr0ijzYH6P6uuDhAYADyBDn
-    YhO/bJGoWSkgkxu8UgDKeTCyLwKBgQDmAGB1KnNULFPpgY4KPNyDkFMlGCkZPUmG
-    gx3pbQ+PuXMJDyrTwQZFqM2Lf1VF6sGTuzbNYcXMeO0IHMMwBAaileCHJuJkux6+
-    4lxADqPmfZaIt5FvOsU7hD5nSCXla3+tHW3hoVKQBd/oANUT2UsdgDVEAsKihYPW
-    62k6ygiTDQKBgQDFO//e88BCBnm0l1BZkgmxlY+nU9X+xMkDYg6K0KlWQHdvWSC4
-    kAVYrMwDFIEgktj+dTwihqWXtlFgCiorWEP7bp4K+nmLdLULAh8Ck+6bAoGyc2qw
-    B1ymigt6llTJgvHNGayXzST+eh2/WZyg0xbobbInmqCfE6WK58wFBmEDMwKBgQCt
-    lh82joFYR9RU6ZiAFYsAKI738hIioGS7hn2uzMbv3DD751yVUJshO9NVsxZynEjY
-    7HTh8SbNuX57numZdZBkaOV6W1iGWctMmZ6yIdqFfMd+C71Ry3NMBfTrEkK3sbg8
-    uXdS0OR1GlnwyaAHSPouG7MXz1WCP25PaICVBCIQiQKBgQC4PTJ2MzPz7JHFe9lS
-    iXXNI2SwjUCyfD7JkOphqwYaY2cEz9+2Df1juyCjCRuLNAwdB4X2JBaF9zy6uW0Y
-    M4s7ELeGivoptuG50XsZOHzqE3nn8vCtaPEWazQoBVbbPTte6xBgFjiI6s2cfGQ+
-    bFUmBhMVrZnskmpAcm6XjrHOWA==
+    MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCt0ujZEAvJxx4V
+    j2KyUsqIyPYyhL4movuWSZVujL3WaqddMqkTBisQ4u4176FhTKT8YQ1jBvIDKfbO
+    6wZnYnxM6IOTfJqKrM5jWH55yUU9rIE/g6f1CoC+OLMJhDZQnMVfgPbOWugnMczh
+    7ZuskfbIs7p0b96wS91smudOMXq5zW9zVhB3Ub5iC1YTouAgXyrla/ydWY6ltJzX
+    Bk4eqcEcivfGivTM+ZIdDR+s3+WinpqnBvZNEjj+wImhe6FSF3YGDzpqS2Kw4+nQ
+    KrXejlGiIJSdt3hvpCUh3wNaQMhZbICWwKysRJbwiJwAX6ESGaef/m94ErfWBgLA
+    YZsah7xbAgMBAAECggEAJVyUhPdweTXtzveLYMXv15fOZ0xl7LsSdZqqXmEs+rXg
+    9GTLt5WXUyFbz0cK+nV1bvPTY0oeYbS24oHc1gLysbs2cNCTDSSYlfzy7m1nDxsR
+    itvbEY3o3zojrXN4EzqnJ+B57B/ZD3eiUJt4Xw7eqwQKmzVieaVM2ievePykouPc
+    oDEpY318loJHK5Ylhg3Opz66rhdHVq1zehAugIvOweJitmiWndcqg9PhK3jd7pT/
+    R7yq0VzAruOxfsuDfau7VbRt/7KoII0UZSf6C3wpkiVOhRMiDQuwNwMy3VC2iGh5
+    QZKn1E3LjQSBib136pepVkK9CJcDKzW4KHD382Qm2QKBgQDpU3XajNpUhqaSWJ9a
+    PJprjbMuaOaPrprwZuiMZA6V7pTc9jDw7vuVKaD+jl7ns1ZMXIXgh97yjWb/EtcT
+    0f7oqUc3Yj8ceJ28HWNTmvNpX5JhuUJIbzMq+6uRC50v7XLfDCXWvBAhV00TfG2h
+    VMx4K9tZPkRgf2fgaQam6+lD+QKBgQC+tzEQDtDJ/EWTYfCl3Lq66Ess9uMw3sm+
+    eY3wrQQPaDRfzc+bFuyilWdwz/UogcL19sMUspI9VdZivUs3Tz3fCPOY3CWvFffQ
+    z0bwghmJ6DMMBYfXGmgj3yvzw+3PMbz+DWs0dYOLLtN69ByRQMREnjdc7sINHTET
+    6u4pGw2v8wKBgQCyH/UpE77aKLGhp+Z/jSSWV2cjVxItPq8qOGXwR7Ka47jht1FF
+    niySg2VU8Hujh1WqljfeYdvib/DhahCoIPjpxdGIhoiHw80nf4gEm5aYK04lLLld
+    cwctGVSxNpyZqjy36x44APqPeYZuCd/n+kTeuRyL1O1+fcVfnM5nQFKkgQKBgCaC
+    NOzqIOx3/NB6mS3UePvehbdpjoxCn/fO8YMkXEqEHvctRnspUNSvWDimNPld4jDq
+    B4/5UqAB4g0D7dkYLgUH+K/n29ATnntSLx/HFUMMWKpXv4sGcPq1SFmrOSx5/ZBK
+    w1fPVqVW6irMeaw2qKq2S7V/HD2rpEpCSJ6SMNxTAoGAEKJwSL1icrt1dSY/7+97
+    R/4yXPgIpplpNjyHIEVpC96EBRTa6IEn0qZi11ScsBmD26Abr0uXQCnTmX1EdDt8
+    KjzQGP/1OVzTK0f6OEPE53wZUTdADb10gwYvW1tSlM8M2Xn4qikI9DUBzOUNk+9w
+    uGraGpgyTwYC30jHyy5cM8U=
   public-key: |
-    PtDMIJ3/hwvNTYndyVYT1ufAFK+DgJRfUOzVywFIaEqwDfOnp4a4fodPQ2G1TCgx
-    3tmjnf015pRuskBYVymquFFIBjeJyNHfZR1hF0wnwu3zioJO+ze/bgG5PUuEZ1Kp
-    SrTRjB85qDRcmGN6c8LMaofa+XT7fYaWy+ckGQOzK75MB9M5wdTB0AkPrqVeexk5
-    UAsncFwxfLfFa7oG46qcuJaLi726GQNymioKXf7ct6/TKVbZi6JaEHCg/YFs6dVF
-    IoPgAtkInlYOh7YZrjL+0PGcYACUMRGxev8MlnRlhyAw2a/tfD7lxAO51SmjxUIJ
-    YwIDAQAB
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArdLo2RALycceFY9islLK
+    iMj2MoS+JqL7lkmVboy91mqnXTKpEwYrEOLuNe+hYUyk/GENYwbyAyn2zusGZ2J8
+    TOiDk3yaiqzOY1h+eclFPayBP4On9QqAvjizCYQ2UJzFX4D2zlroJzHM4e2brJH2
+    yLO6dG/esEvdbJrnTjF6uc1vc1YQd1G+YgtWE6LgIF8q5Wv8nVmOpbSc1wZOHqnB
+    HIr3xor0zPmSHQ0frN/lop6apwb2TRI4/sCJoXuhUhd2Bg86aktisOPp0Cq13o5R
+    oiCUnbd4b6QlId8DWkDIWWyAlsCsrESW8IicAF+hEhmnn/5veBK31gYCwGGbGoe8
+    WwIDAQAB
   access:
     lifetime: 900000       # 15 минут
   refresh:
