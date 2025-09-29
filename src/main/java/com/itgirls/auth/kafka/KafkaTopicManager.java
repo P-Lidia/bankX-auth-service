@@ -63,9 +63,11 @@ public class KafkaTopicManager {
             adminClient.createTopics(Collections.singleton(newTopic)).all().get();
             log.info("Topic '{}' created successfully (Partitions: {}, Replication: {})",
                     topicName, numPartitions, replicationFactor);
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("Failed to create topic '{}'", topicName, e);
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            log.error("Interrupted while creating topic '{}'", topicName, e);
+        } catch (ExecutionException e) {
+            log.error("Execution error while creating topic '{}'", topicName, e);
         }
     }
 
