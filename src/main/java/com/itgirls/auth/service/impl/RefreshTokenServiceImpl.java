@@ -25,34 +25,43 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final JwtUtil jwtUtil;
     private final UserMapper userMapper;
 
-    @Override
-    public TokenResponseDto refreshTokens(String refreshToken) {
-        jwtUtil.isValid(refreshToken);
-        RefreshToken tokenEntity = refreshTokenRepository.findByTokenValue(refreshToken)
-                .orElseThrow(() -> new BadCredentialsException("Invalid refresh token"));
-        User user = tokenEntity.getUser();
-
-        UserJwtDto userJwtDto = userMapper.toUserJwtDto(user);
-        String newAccessToken = jwtUtil.generateAccessToken(userJwtDto);
-        String newRefreshToken = generateAndSaveRefreshToken(user);
-
-        return new TokenResponseDto(newAccessToken, newRefreshToken);
-    }
-
+    // Генерация нового refresh-токена
     @Transactional
     @Override
     public String generateAndSaveRefreshToken(User user) {
 
+        // Генерируем новый refresh-токен
         String valueToken = jwtUtil.generateRefreshToken(userMapper.toUserJwtDto(user));
 
+        // сохраняем новый токен в БД
         RefreshToken refreshToken = RefreshToken.builder()
                 .tokenValue(valueToken)
                 .user(user)
                 .expiryDate(Instant.now().plusMillis(jwtUtil.getJwtRefreshTokenExpiration()))
                 .build();
-        refreshTokenRepository.deleteByUser(refreshToken.getUser());
         refreshTokenRepository.save(refreshToken);
+
         return valueToken;
+    }
+
+    // Замена существующих токенов
+    @Override
+    public TokenResponseDto refreshTokens(String refreshToken) {
+        jwtUtil.isValid(refreshToken);
+        RefreshToken currentToken = refreshTokenRepository.findByTokenValue(refreshToken)
+                .orElseThrow(() -> new BadCredentialsException("Invalid refresh token"));
+
+        // Генерация новых токенов
+        UserJwtDto userJwtDto = userMapper.toUserJwtDto(currentToken.getUser());
+        String newAccessToken = jwtUtil.generateAccessToken(userJwtDto);
+        String newRefreshToken = jwtUtil.generateRefreshToken(userJwtDto);
+
+        // Обновление refresh-токена в БД
+        currentToken.setTokenValue(newRefreshToken);
+        currentToken.setExpiryDate(Instant.now().plusMillis(jwtUtil.getJwtRefreshTokenExpiration()));
+        refreshTokenRepository.save(currentToken);
+
+        return new TokenResponseDto(newAccessToken, newRefreshToken);
     }
 
     @Override
@@ -60,9 +69,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     public void logout(String refreshToken) {
         if (refreshToken == null) return;
         if (!refreshTokenRepository.existsByTokenValue(refreshToken)) {
-            log.warn("Logout attempt with non-existent refresh token");
+            log.warn("Logout attempt with non-existent refresh token ");
             return;
         }
+        // Удаление refresh-токена из БД
         refreshTokenRepository.deleteByTokenValue(refreshToken);
     }
 }

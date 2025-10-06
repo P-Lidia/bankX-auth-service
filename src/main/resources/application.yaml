@@ -11,7 +11,7 @@ spring:
   jpa:
     hibernate:
       # Hibernate будет автоматически обновлять схему базы данных (можно изменить по необходимости)
-      ddl-auto: update
+      ddl-auto: validate
     # для вывода SQL-запросов в лог (удобно для отладки)
     show-sql: true
 
@@ -31,6 +31,41 @@ spring:
         enable-idempotence: true # protection against duplicates
 
 jwt:
+  private-key: |
+    MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCt0ujZEAvJxx4V
+    j2KyUsqIyPYyhL4movuWSZVujL3WaqddMqkTBisQ4u4176FhTKT8YQ1jBvIDKfbO
+    6wZnYnxM6IOTfJqKrM5jWH55yUU9rIE/g6f1CoC+OLMJhDZQnMVfgPbOWugnMczh
+    7ZuskfbIs7p0b96wS91smudOMXq5zW9zVhB3Ub5iC1YTouAgXyrla/ydWY6ltJzX
+    Bk4eqcEcivfGivTM+ZIdDR+s3+WinpqnBvZNEjj+wImhe6FSF3YGDzpqS2Kw4+nQ
+    KrXejlGiIJSdt3hvpCUh3wNaQMhZbICWwKysRJbwiJwAX6ESGaef/m94ErfWBgLA
+    YZsah7xbAgMBAAECggEAJVyUhPdweTXtzveLYMXv15fOZ0xl7LsSdZqqXmEs+rXg
+    9GTLt5WXUyFbz0cK+nV1bvPTY0oeYbS24oHc1gLysbs2cNCTDSSYlfzy7m1nDxsR
+    itvbEY3o3zojrXN4EzqnJ+B57B/ZD3eiUJt4Xw7eqwQKmzVieaVM2ievePykouPc
+    oDEpY318loJHK5Ylhg3Opz66rhdHVq1zehAugIvOweJitmiWndcqg9PhK3jd7pT/
+    R7yq0VzAruOxfsuDfau7VbRt/7KoII0UZSf6C3wpkiVOhRMiDQuwNwMy3VC2iGh5
+    QZKn1E3LjQSBib136pepVkK9CJcDKzW4KHD382Qm2QKBgQDpU3XajNpUhqaSWJ9a
+    PJprjbMuaOaPrprwZuiMZA6V7pTc9jDw7vuVKaD+jl7ns1ZMXIXgh97yjWb/EtcT
+    0f7oqUc3Yj8ceJ28HWNTmvNpX5JhuUJIbzMq+6uRC50v7XLfDCXWvBAhV00TfG2h
+    VMx4K9tZPkRgf2fgaQam6+lD+QKBgQC+tzEQDtDJ/EWTYfCl3Lq66Ess9uMw3sm+
+    eY3wrQQPaDRfzc+bFuyilWdwz/UogcL19sMUspI9VdZivUs3Tz3fCPOY3CWvFffQ
+    z0bwghmJ6DMMBYfXGmgj3yvzw+3PMbz+DWs0dYOLLtN69ByRQMREnjdc7sINHTET
+    6u4pGw2v8wKBgQCyH/UpE77aKLGhp+Z/jSSWV2cjVxItPq8qOGXwR7Ka47jht1FF
+    niySg2VU8Hujh1WqljfeYdvib/DhahCoIPjpxdGIhoiHw80nf4gEm5aYK04lLLld
+    cwctGVSxNpyZqjy36x44APqPeYZuCd/n+kTeuRyL1O1+fcVfnM5nQFKkgQKBgCaC
+    NOzqIOx3/NB6mS3UePvehbdpjoxCn/fO8YMkXEqEHvctRnspUNSvWDimNPld4jDq
+    B4/5UqAB4g0D7dkYLgUH+K/n29ATnntSLx/HFUMMWKpXv4sGcPq1SFmrOSx5/ZBK
+    w1fPVqVW6irMeaw2qKq2S7V/HD2rpEpCSJ6SMNxTAoGAEKJwSL1icrt1dSY/7+97
+    R/4yXPgIpplpNjyHIEVpC96EBRTa6IEn0qZi11ScsBmD26Abr0uXQCnTmX1EdDt8
+    KjzQGP/1OVzTK0f6OEPE53wZUTdADb10gwYvW1tSlM8M2Xn4qikI9DUBzOUNk+9w
+    uGraGpgyTwYC30jHyy5cM8U=
+  public-key: |
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArdLo2RALycceFY9islLK
+    iMj2MoS+JqL7lkmVboy91mqnXTKpEwYrEOLuNe+hYUyk/GENYwbyAyn2zusGZ2J8
+    TOiDk3yaiqzOY1h+eclFPayBP4On9QqAvjizCYQ2UJzFX4D2zlroJzHM4e2brJH2
+    yLO6dG/esEvdbJrnTjF6uc1vc1YQd1G+YgtWE6LgIF8q5Wv8nVmOpbSc1wZOHqnB
+    HIr3xor0zPmSHQ0frN/lop6apwb2TRI4/sCJoXuhUhd2Bg86aktisOPp0Cq13o5R
+    oiCUnbd4b6QlId8DWkDIWWyAlsCsrESW8IicAF+hEhmnn/5veBK31gYCwGGbGoe8
+    WwIDAQAB
   access:
     lifetime: 900000       # 15 минут
   refresh:

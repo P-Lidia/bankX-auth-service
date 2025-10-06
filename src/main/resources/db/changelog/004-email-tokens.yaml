@@ -19,7 +19,7 @@ databaseChangeLog:
                               nullable: false
                     - column:
                           name: token
-                          type: UUID
+                          type: VARCHAR(255)
                           constraints:
                               nullable: false
                               unique: true

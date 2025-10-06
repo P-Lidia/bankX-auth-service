@@ -4,7 +4,7 @@ import com.itgirls.auth.dto.TokenResponseDto;
 import com.itgirls.auth.entity.User;
 
 public interface RefreshTokenService {
-    TokenResponseDto refreshTokens(String refreshToken);
     String generateAndSaveRefreshToken(User user);
+    TokenResponseDto refreshTokens(String refreshToken);
     void logout(String refreshToken);
 }

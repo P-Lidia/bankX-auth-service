@@ -15,7 +15,7 @@ services:
     networks:
       - bankx-network
 
-  #сервис postgres —  отдельный контейнер с PostgreSQL, который запускается вместе с сервисом.
+  #сервис postgres — отдельный контейнер с PostgreSQL, который запускается вместе с сервисом.
   postgres:
     image: postgres:15
     environment:
@@ -37,6 +37,7 @@ services:
     container_name: kafka
     ports:
       - 9092:9092 # Порт для клиентских подключений (Kafka listeners для приложений: продюсеры, консьюмеры)
+      - 29092:29092  # Порт для доступа с хоста
     environment:
       #CLUSTER_ID:
       # Генерируется через `kafka-storage.sh random-uuid`
@@ -48,12 +49,13 @@ services:
       # Значение `broker,controller` означает "single-node" кластер (совмещены роли)
       KAFKA_PROCESS_ROLES: broker,controller
       # Какие протоколы и на каких интерфейсах слушает Kafka внутри контейнера
-      # PLAINTEXT — внешний интерфейс для клиентов ( Без шифрования и авторизации), CONTROLLER — интерфейс для внутренней связи контроллеров
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      # PLAINTEXT — внешний интерфейс для клиентов (Без шифрования и авторизации), CONTROLLER — интерфейс для внутренней связи контроллеров
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092, CONTROLLER://0.0.0.0:9093
       # Kafka listeners определяют, на каких интерфейсах и портах брокер принимает подключения, и какие протоколы безопасности использовать.
-      KAFKA_ADVERTISED_LISTENERS:  PLAINTEXT://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092, PLAINTEXT_HOST://localhost:29092
       # Указывает, какие протоколы безопасности применяются к каждому типу listener'а
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT, CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       # Указывает, какой listener используется контроллером
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       # Конфигурация кворума контроллеров в KRaft- это набор брокеров, которые исполняют роль контроллера и управляют метаданными всего кластера.
@@ -81,7 +83,7 @@ services:
     networks:
       - bankx-network
     healthcheck:
-      test: [ "CMD", "kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list" ]
+      test: [ "CMD", "kafka-topics.sh", "--bootstrap-server", "kafka:9092", "--list" ]
       interval: 10s
       timeout: 10s
       retries: 5
