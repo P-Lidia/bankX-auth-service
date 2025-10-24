@@ -30,6 +30,28 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Сервис для аутентификации и управления пользователями.
+ *
+ * <p>Предоставляет методы для:
+ * <ul>
+ *     <li>регистрации нового пользователя</li>
+ *     <li>активации аккаунта по email-токену</li>
+ *     <li>логина с генерацией access и refresh jwt-токенов</li>
+ *     <li>запроса сброса пароля и его обновления</li>
+ * </ul>
+ *
+ * <p>Использует:
+ * <ul>
+ *     <li>{@link UserRepository} для работы с пользователями</li>
+ *     <li>{@link EmailTokenRepository} для управления email-токенами</li>
+ *     <li>{@link RoleRepository} для назначения ролей</li>
+ *     <li>{@link JwtUtil} для генерации JWT</li>
+ *     <li>{@link RefreshTokenService} для работы с refresh-токенами</li>
+ *     <li>{@link PasswordEncoder} для шифрования пароля</li>
+ *     <li>{@link KafkaProducer} для отправки событий в Kafka</li>
+ * </ul>
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -49,6 +71,16 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final KafkaProducer kafkaProducer;
 
+    /**
+     * Регистрирует нового пользователя.
+     *
+     * <p>Проверяет уникальность email, назначает роль, сохраняет пользователя,
+     * генерирует токен активации и отправляет событие в Kafka.
+     *
+     * @param registrationRequestDto DTO с данными для регистрации
+     * @return {@link ApiResponse} с сообщением о результате регистрации
+     * @throws ApplicationException если email уже занят или роль неизвестна
+     */
     @Override
     @Transactional
     public ApiResponse<String> register(RegistrationRequestDto registrationRequestDto) {
@@ -78,6 +110,13 @@ public class AuthServiceImpl implements AuthService {
         return new ApiResponse<>("Registration successful, check your email");
     }
 
+    /**
+     * Активирует аккаунт пользователя по email-токену активации.
+     *
+     * @param token email-токен активации
+     * @return {@link ApiResponse} с сообщением и данными пользователя
+     * @throws ApplicationException если email-токен недействителен или пользователь не найден
+     */
     @Override
     @Transactional
     public ApiResponse<UserResponseDto> activateAccount(String token) {
@@ -98,6 +137,13 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
+    /**
+     * Логин пользователя с генерацией access и refresh jwt-токенов.
+     *
+     * @param loginRequestDto DTO с email и паролем
+     * @return {@link TokenResponseDto} с access и refresh jwt-токенами
+     * @throws ApplicationException если учетные данные неверны
+     */
     @Override
     public TokenResponseDto login(LoginRequestDto loginRequestDto) {
         User user = userRepository.findByEmail(loginRequestDto.getEmail())
@@ -117,6 +163,15 @@ public class AuthServiceImpl implements AuthService {
                 refreshToken);
     }
 
+    /**
+     * Запрашивает сброс пароля для пользователя по email.
+     *
+     * <p>Генерирует email-токен восстановления и отправляет событие в Kafka.
+     *
+     * @param request DTO с email пользователя
+     * @return {@link ApiResponse} с сообщением о ссылке для сброса
+     * @throws ApplicationException если пользователь с указанным email не найден
+     */
     @Override
     public ApiResponse<String> requestPasswordReset(ForgotPasswordRequestDTO request) {
         User user = userRepository.findByEmail(request.getEmail())
@@ -134,6 +189,16 @@ public class AuthServiceImpl implements AuthService {
         return new ApiResponse<>("Password reset link sent, check your email");
     }
 
+    /**
+     * Сбрасывает пароль пользователя по email-токену восстановления.
+     *
+     * <p>Обновляет пароль пользователя и помечает email-токен как использованный.
+     *
+     * @param request DTO с новым паролем
+     * @param token email-токен восстановления
+     * @return {@link ApiResponse} с сообщением об успешном изменении пароля
+     * @throws ApplicationException если email-токен недействителен или пользователь не найден
+     */
     @Override
     @Transactional
     public ApiResponse<String> resetPassword(ResetPasswordRequestDTO request, String token) {
@@ -149,6 +214,7 @@ public class AuthServiceImpl implements AuthService {
         log.info("New password for user id={} saved", user.getId());
         return new ApiResponse<>("Password successfully saved");
     }
+
 
     private User findUserById(Long userId) {
         return userRepository.findById(userId)
@@ -171,6 +237,9 @@ public class AuthServiceImpl implements AuthService {
         return emailToken;
     }
 
+    /**
+     * Генерирует email-токен и сохраняет его в базе.
+     */
     private String generateToken(User user, String type) {
         // Генерация токена
         String token = UUID.randomUUID().toString();
@@ -190,6 +259,9 @@ public class AuthServiceImpl implements AuthService {
         return token;
     }
 
+    /**
+     * Создаёт DTO события для отправки в Kafka.
+     */
     private UserEventDto createUserEventDto(User user, String emailToken) {
         return UserEventDto.builder()
                 .firstName(user.getName())

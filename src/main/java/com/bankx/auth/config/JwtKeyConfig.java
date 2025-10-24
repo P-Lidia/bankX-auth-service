@@ -11,6 +11,13 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
+/**
+ * Конфигурационный компонент для инициализации RSA-ключей, используемых для подписи и проверки JWT.
+ *
+ * <p>Загружает приватную и публичную подпись из конфигурации приложения
+ * ({@code application.yaml}), декодирует их из Base64 и создаёт объекты
+ * {@link PrivateKey} и {@link PublicKey}, которые регистрируются как Spring-бины.
+ */
 @Component
 public class JwtKeyConfig {
     public static final String RSA_ALGORITHM = "RSA";

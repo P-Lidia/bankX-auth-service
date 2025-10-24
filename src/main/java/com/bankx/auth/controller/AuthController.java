@@ -81,6 +81,16 @@ public class AuthController {
         return ResponseEntity.ok(authService.resetPassword(request, token));
     }
 
+    /**
+     * Формирует ResponseEntity с access-токеном в теле ответа
+     * и refresh-токеном в HttpOnly cookie.
+     *
+     * <p>Используется методами {@code login} и {@code refreshToken}
+     * для стандартизированного ответа клиенту.
+     *
+     * @param tokensDTO DTO с access и refresh токенами
+     * @return ResponseEntity с access-токеном и Set-Cookie заголовком для refresh-токена
+     */
     private ResponseEntity<String> buildAccessTokenResponse(@NonNull TokenResponseDto tokensDTO) {
         ResponseCookie refreshCookie = cookieUtil.createRefreshCookie(tokensDTO.getRefreshToken());
         return ResponseEntity.ok()
