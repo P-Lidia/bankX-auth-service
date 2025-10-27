@@ -11,6 +11,19 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 
+/**
+ * Глобальный обработчик исключений для REST-контроллеров.
+ *
+ * <p>Обеспечивает централизованную обработку ошибок и формирование структурированного ответа API.
+ * Все исключения возвращаются в виде {@link ErrorResponse} с корректным HTTP-статусом.
+ *
+ * <p>Обрабатывает следующие типы исключений:
+ * <ul>
+ *     <li>{@link ApplicationException} – бизнес-ошибки приложения с кастомными кодами {@link ErrorCode}</li>
+ *     <li>{@link MethodArgumentNotValidException} – ошибки валидации DTO {@code @Valid}</li>
+ *     <li>{@link Exception} – fallback для неожиданных ошибок сервера</li>
+ * </ul>
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -19,6 +32,15 @@ public class GlobalExceptionHandler {
     private static final String ERROR_INTERNAL_MESSAGE = "Unexpected error occurred";
     private static final int FIRST_ERROR = 0;
 
+    /**
+     * Обрабатывает {@link ApplicationException}.
+     *
+     * <p>Формирует {@link ErrorResponse} на основе {@link ErrorCode} и
+     * возвращает его с соответствующим HTTP-статусом.
+     *
+     * @param ex исключение приложения
+     * @return ResponseEntity с {@link ErrorResponse} и статусом из {@link ErrorCode}
+     */
     @ExceptionHandler(ApplicationException.class)
     public ResponseEntity<ErrorResponse> handleApplicationException(ApplicationException ex) {
         ErrorCode errorCode = ex.getErrorCode();
@@ -33,7 +55,15 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, errorCode.getHttpStatus());
     }
 
-    // Ошибки валидации @Valid
+    /**
+     * Обрабатывает ошибки валидации DTO {@code @Valid}.
+     *
+     * <p>Возвращает первую ошибку из списка обнаруженных при проверке ДТО с HTTP-статусом 400 (BAD_REQUEST)
+     * и кодом ошибки {@code VALIDATION_ERROR}.
+     *
+     * @param ex исключение валидации
+     * @return ResponseEntity с {@link ErrorResponse} и статусом 400
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
         // из всех ошибок при валидации возьмет первую и покажет с дефолтным сообщением из ДТО
@@ -49,7 +79,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // fallback для неожиданных ошибок
+    /**
+     * Fallback-обработчик для неожиданных исключений.
+     *
+     * <p>Возвращает общее сообщение об ошибке с HTTP-статусом 500 (INTERNAL_SERVER_ERROR)
+     * и кодом ошибки {@code INTERNAL_ERROR}.
+     *
+     * @param ex непредвиденное исключение
+     * @return ResponseEntity с {@link ErrorResponse} и статусом 500
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
 

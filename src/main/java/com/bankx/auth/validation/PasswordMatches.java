@@ -8,6 +8,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Аннотация для валидации соответствия пароля и его подтверждения.
+ *
+ * <p>Применяется к {@link com.bankx.auth.dto.RegistrationRequestDto} при регистрации пользователя и проверяет,
+ * что поля {@code password} и {@code confirmPassword} совпадают.
+ * Для выполнения проверки используется {@link PasswordMatchesValidator}.
+ */
 @Constraint(validatedBy = PasswordMatchesValidator.class)
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

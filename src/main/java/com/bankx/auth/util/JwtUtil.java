@@ -17,6 +17,19 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Утилитарный компонент для работы с JWT-токенами.
+ *
+ * <p>Предоставляет методы для:
+ * <ul>
+ *     <li>генерации access и refresh токенов для пользователя</li>
+ *     <li>проверки валидности токена</li>
+ *     <li>извлечения данных из токена (claims, subject, userId, roles)</li>
+ *     <li>определения типа токена (access или refresh)</li>
+ * </ul>
+ *
+ * <p>Использует приватный и публичный RSA-ключи для подписи и проверки токена.
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtUtil {
@@ -31,8 +44,17 @@ public class JwtUtil {
     @Getter
     private final PublicKey publicKey;
 
+    /**
+     * Время жизни access-токена в миллисекундах.
+     * Значение берётся из конфигурации приложения (application.yaml).
+     */
     @Value("${jwt.access.lifetime}")
     private long jwtAccessTokenExpiration;
+
+    /**
+     * Время жизни refresh-токена в миллисекундах.
+     * Значение берётся из конфигурации приложения (application.yaml).
+     */
     @Getter
     @Value("${jwt.refresh.lifetime}")
     private long jwtRefreshTokenExpiration;

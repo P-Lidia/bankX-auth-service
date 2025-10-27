@@ -4,6 +4,21 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+/**
+ * Enum с кодами ошибок приложения.
+ *
+ * <p>Каждое значение содержит:
+ * <ul>
+ *     <li>HTTP-статус ответа</li>
+ *     <li>Стандартное сообщение ошибки</li>
+ * </ul>
+ *
+ * <p>Используется для:
+ * <ul>
+ *     <li>{@link ApplicationException} – для генерации исключений с кодом ошибки</li>
+ *     <li>{@link ErrorResponse} – для заполнения поля {@code error} и HTTP-статуса в ответе API</li>
+ * </ul>
+ */
 @Getter
 @AllArgsConstructor
 public enum ErrorCode {

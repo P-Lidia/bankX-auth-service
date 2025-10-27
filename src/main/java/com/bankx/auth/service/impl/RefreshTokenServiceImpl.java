@@ -16,6 +16,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
+
+/**
+ * Реализация сервиса для работы с refresh-токенами.
+ *
+ * <p>Предоставляет методы для:
+ * <ul>
+ *     <li>генерации и сохранения нового refresh-токена</li>
+ *     <li>обновления access и refresh токенов</li>
+ *     <li>удаления refresh-токена при logout</li>
+ * </ul>
+ *
+ * <p>Использует {@link JwtUtil} для генерации токенов и {@link RefreshTokenRepository} для работы с БД.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -25,7 +38,12 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final JwtUtil jwtUtil;
     private final UserMapper userMapper;
 
-    // Генерация нового refresh-токена
+    /**
+     * Генерирует новый refresh-токен для пользователя и сохраняет его в базе.
+     *
+     * @param user пользователь, для которого создаётся refresh-токен
+     * @return сгенерированный refresh-токен
+     */
     @Transactional
     @Override
     public String generateAndSaveRefreshToken(User user) {
@@ -44,7 +62,13 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return valueToken;
     }
 
-    // Замена существующих токенов
+    /**
+     * Обновляет access и refresh токены по существующему refresh-токену.
+     *
+     * @param refreshToken текущий refresh-токен
+     * @return объект {@link TokenResponseDto} с новым access и refresh токенами
+     * @throws BadCredentialsException если переданный refresh-токен недействителен
+     */
     @Override
     public TokenResponseDto refreshTokens(String refreshToken) {
         jwtUtil.isValid(refreshToken);
@@ -64,6 +88,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return new TokenResponseDto(newAccessToken, newRefreshToken);
     }
 
+    /**
+     * Удаляет refresh-токен из базы при logout пользователя.
+     *
+     * @param refreshToken refresh-токен пользователя
+     */
     @Override
     @Transactional
     public void logout(String refreshToken) {
